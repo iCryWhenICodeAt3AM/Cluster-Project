@@ -437,7 +437,20 @@
                                     </tr>
                                 </thead>
                                 <tbody id="products-stock">
-                                    <!-- Products will be dynamically populated here -->
+                                    <!-- Example product row -->
+                                    <tr>
+                                        <!-- ...existing product details... -->
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='{"product_id": "PRODUCT_ID", "item": "Product Name", "category": "Category", "price": 100, "brand": "Brand", "description": "Description"}'>
+                                                    <i class="bi bi-pencil"></i> Update
+                                                </button>
+                                                <button class="btn btn-sm btn-danger btn-delete" data-product-id="PRODUCT_ID">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -547,21 +560,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="editProductForm">
+                        <!-- Optional Product ID Update -->
+                        <div class="mb-3">
+                            <label for="editProductId" class="form-label">New Product ID (Optional)</label>
+                            <input type="text" class="form-control" id="editProductId" placeholder="Leave blank to keep current ID">
+                        </div>
                         <div class="mb-3">
                             <label for="editProductName" class="form-label">Product Name</label>
-                            <input type="text" class="form-control" id="editProductName" required>
+                            <input type="text" class="form-control" id="editProductName">
                         </div>
                         <div class="mb-3">
                             <label for="editProductCategory" class="form-label">Category</label>
                             <div class="input-group">
-                                <select class="form-select" id="editProductCategory" required>
+                                <select class="form-select" id="editProductCategory">
                                     <option selected disabled>Select category</option>
-                                    <option>Burgers</option>
-                                    <option>Pizza</option>
-                                    <option>Sides</option>
-                                    <option>Beverages</option>
-                                    <option>Desserts</option>
+                                    <!-- Categories will be dynamically populated here -->
                                 </select>
                                 <button class="btn btn-outline-secondary" type="button" id="editAddNewCategoryButton">Add New</button>
                             </div>
@@ -569,15 +583,15 @@
                         </div>
                         <div class="mb-3">
                             <label for="editProductPrice" class="form-label">Price</label>
-                            <input type="number" class="form-control" id="editProductPrice" required>
+                            <input type="number" class="form-control" id="editProductPrice">
                         </div>
                         <div class="mb-3">
                             <label for="editProductBrand" class="form-label">Brand</label>
-                            <input type="text" class="form-control" id="editProductBrand" required>
+                            <input type="text" class="form-control" id="editProductBrand">
                         </div>
                         <div class="mb-3">
                             <label for="editProductDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="editProductDescription" rows="3" required></textarea>
+                            <textarea class="form-control" id="editProductDescription" rows="3"></textarea>
                         </div>
                         <button type="submit" class="btn btn-primary">Save Changes</button>
                     </form>
@@ -636,6 +650,53 @@
               })
               .catch(error => console.error('Error during logout:', error));
           });
+        });
+
+        // Function to handle product deletion
+        function deleteProduct(productId) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+            return;
+            }
+
+            fetch(`/api/delete-product/${productId}`, {
+            method: 'DELETE',
+            })
+            .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.text(); // Expecting plain text response
+            })
+            .then(message => {
+                alert(message.message || 'Product deleted successfully!');
+                location.reload(); // Reload the page to reflect changes
+            })
+            .catch(error => {
+            console.error('Error deleting product:', error);
+            alert('An error occurred. Please check the server logs or try again.');
+            });
+        }
+
+        // Attach delete button functionality dynamically
+        document.getElementById('products-stock').addEventListener('click', function (e) {
+            const target = e.target.closest('.btn-delete'); // Ensure the correct button is targeted
+            if (target) {
+                const productId = target.getAttribute('data-product-id'); // Get the product ID
+                if (productId) {
+                    deleteProduct(productId);
+                } else {
+                    console.error('Product ID not found on delete button.');
+                }
+            }
+        });
+
+        // Attach event listener to dynamically open the Edit Product modal
+        document.getElementById('products-stock').addEventListener('click', function (e) {
+            const target = e.target.closest('.btn-primary'); // Ensure the correct button is targeted
+            if (target && target.dataset.product) {
+                const product = JSON.parse(target.dataset.product); // Parse the product data
+                openEditProductModal(product);
+            }
         });
     </script>
 </body>
