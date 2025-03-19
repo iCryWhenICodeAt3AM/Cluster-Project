@@ -3,15 +3,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const productsStockTable = document.getElementById("products-stock");
   const paginationControls = document.getElementById("pagination-controls");
   const categoryDropdowns = document.querySelectorAll("#productCategory, #editProductCategory");
-  const storageKey = "allProducts";
   const itemsPerPage = 5;
   let currentPage = 1;
   let currentProducts = [];
   let currentSortKey = null;
   let currentSortOrder = null;
 
-  // Fetch all products and save them in local storage
-  function fetchAndStoreProducts() {
+  // Fetch all products from the server
+  function fetchProducts() {
     fetch("/api/dashboard/padeliver-products-with-stock")
       .then((response) => {
         if (!response.ok) {
@@ -25,19 +24,18 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
-        // Save products to local storage
-        localStorage.setItem(storageKey, JSON.stringify(products));
+        currentProducts = products; // Update the current products list
         updateLowStockProducts(products);
         updateAllProducts();
-        fetchAndPopulateCategories(products); // Dynamically update categories
+        populateCategories(products); // Dynamically update categories
       })
       .catch((error) => console.error("Error fetching products:", error));
   }
 
-  // Fetch and populate categories dynamically
-  function fetchAndPopulateCategories(products) {
+  // Populate categories dynamically
+  function populateCategories(products) {
     if (!products || !Array.isArray(products)) {
-      console.error("Invalid products array passed to fetchAndPopulateCategories");
+      console.error("Invalid products array passed to populateCategories");
       return;
     }
 
@@ -144,6 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Populate the table with paginated products
     paginatedProducts.forEach((product) => {
       const row = document.createElement("tr");
+      row.setAttribute("data-product-id", product.product_id); // Store the product_id in a data attribute
       const stockBadgeClass = product.stock < 10 ? "bg-danger" : product.stock < 30 ? "bg-warning" : "bg-success";
       row.innerHTML = `
         <td>
@@ -165,10 +164,10 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
         <td>
           <div class="btn-group">
-            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editProductModal">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-danger">
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -180,6 +179,35 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update pagination controls
     updatePaginationControls(currentProducts.length);
   }
+
+  // Function to handle product deletion
+  function deleteProduct(productId) {
+    if (!confirm('Are you sure you want to delete this product?')) {
+        return;
+    }
+
+    fetch(`/api/delete-product/${productId}`, {
+        method: 'DELETE',
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert('Product deleted successfully!');
+            fetchProducts(); // Refresh the product list
+        } else {
+            alert(data.error || 'Failed to delete product.');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting product:', error);
+        alert('An error occurred. Please check the server logs or try again.');
+    });
+}
 
   // Update pagination controls
   function updatePaginationControls(totalItems) {
@@ -295,22 +323,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Load products from local storage and update the tables
-  function loadProductsFromStorage() {
-    const storedProducts = localStorage.getItem(storageKey);
-    if (storedProducts) {
-      const products = JSON.parse(storedProducts);
-      currentProducts = products;
-      updateLowStockProducts(products);
-      updateAllProducts();
-      fetchAndPopulateCategories(products);
-    } else {
-      fetchAndStoreProducts();
-    }
-  }
-
   // Initial load
-  loadProductsFromStorage();
+  fetchProducts();
   attachSortingListeners();
 
   // Add Product Form Submission
@@ -342,7 +356,7 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("Product added successfully!");
           addProductForm.reset();
           // Re-fetch and update the product list
-          fetchAndStoreProducts();
+          fetchProducts();
         } else {
           alert(data.error || data.message || "Error adding product");
           if (data.invalid_field) {
@@ -354,7 +368,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Fetch and populate categories on page load
-  fetchAndPopulateCategories();
+  fetchProducts();
 
   // Handle "Add New Category" toggle for the "Add Product" modal
   const addNewCategoryButton = document.getElementById("addNewCategoryButton");
@@ -368,4 +382,92 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+
+  // Attach event listener for the "Edit Product" form submission
+  document.getElementById("editProductForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const oldProductId = document.getElementById("editProductId").dataset.oldProductId; // Retrieve the old product ID
+    const newProductId = document.getElementById("editProductId").value.trim();
+    const productName = document.getElementById("editProductName").value.trim();
+    const productCategory = document.getElementById("editProductCategory").value.trim();
+    const productPrice = document.getElementById("editProductPrice").value.trim();
+    const productBrand = document.getElementById("editProductBrand").value.trim();
+    const productDescription = document.getElementById("editProductDescription").value.trim();
+
+    // Validate required fields
+    if (!oldProductId) {
+        alert("Old product ID is required.");
+        return;
+    }
+
+    // Prepare the payload with the old product ID and updated fields
+    const payload = { product_id: oldProductId }; // Always include the old product ID
+    if (newProductId) payload.new_product_id = newProductId;
+    if (productName) payload.item = productName;
+    if (productCategory) payload.category = productCategory;
+    if (productPrice) {
+        const price = parseFloat(productPrice);
+        if (isNaN(price)) {
+            alert("Invalid price format. Please enter a valid number.");
+            return;
+        }
+        payload.price = price;
+    }
+    if (productBrand) payload.brand = productBrand;
+    if (productDescription) payload.description = productDescription;
+
+    // Send the update request
+    fetch("/api/update-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    })
+    .then((response) => {
+        if (!response.ok) {
+            return response.json().then((data) => {
+                throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then((data) => {
+        if (data.success) {
+            alert("Product updated successfully!");
+            document.getElementById("editProductForm").reset(); // Reset the form
+            fetchProducts(); // Refresh the product list
+        } else {
+            alert(data.error || "Failed to update product.");
+        }
+    })
+    .catch((error) => {
+        console.error("Error updating product:", error);
+        alert(`An error occurred: ${error.message}`);
+    });
+});
+
+// Attach event listener to dynamically open the Edit Product modal
+document.getElementById("products-stock").addEventListener("click", function (e) {
+    const target = e.target.closest(".btn-primary"); // Ensure the correct button is targeted
+    if (target && target.dataset.product) {
+        const product = JSON.parse(target.dataset.product); // Parse the product data
+
+        // Populate the edit form with product data
+        const editProductIdInput = document.getElementById("editProductId");
+        editProductIdInput.value = ''; // Clear the new product ID field
+        editProductIdInput.setAttribute("data-old-product-id", product.product_id); // Store the old product ID
+
+        document.getElementById("editProductName").value = product.item || '';
+        document.getElementById("editProductCategory").value = product.category || '';
+        document.getElementById("editProductPrice").value = product.price || '';
+        document.getElementById("editProductBrand").value = product.brand || '';
+        document.getElementById("editProductDescription").value = product.description || '';
+
+        // Ensure the modal is properly initialized before showing it
+        const editProductModalElement = document.getElementById("editProductModal");
+        const editProductModal = bootstrap.Modal.getOrCreateInstance(editProductModalElement); // Get or create the modal instance
+        editProductModal.show();
+    }
+});
+
 });

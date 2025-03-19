@@ -203,5 +203,67 @@ def add_padeliver_product():
         print(f"Error in add_padeliver_product: {e}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
+@app.route('/api/update-product', methods=['POST'])
+def update_product():
+    """Handle updating a product."""
+    try:
+        product_data = request.json
+        if not product_data:
+            return jsonify({'error': 'Missing product data'}), 400
+
+        # Validate required fields
+        if 'product_id' not in product_data or not product_data['product_id']:
+            return jsonify({'error': 'Missing or invalid product_id'}), 400
+
+        # Prepare the payload for the external API
+        payload = {'old_product_id': product_data['product_id']}
+        if 'new_product_id' in product_data and product_data['new_product_id']:
+            payload['new_product_id'] = product_data['new_product_id']
+        if 'item' in product_data and product_data['item']:
+            payload['item'] = product_data['item']
+        if 'category' in product_data and product_data['category']:
+            payload['category'] = product_data['category']
+        if 'price' in product_data:
+            try:
+                payload['price'] = float(product_data['price'])
+            except ValueError:
+                return jsonify({'error': 'Invalid price format. Must be a number.'}), 400
+        if 'brand' in product_data and product_data['brand']:
+            payload['brand'] = product_data['brand']
+        if 'description' in product_data and product_data['description']:
+            payload['description'] = product_data['description']
+
+        # Log the payload for debugging purposes
+        print(f"Payload sent to external API: {payload}")
+
+        # Send the product data to the external API
+        response = requests.put(f"{API_BASE_URL}/api/padeliver-product", json=payload)
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to update product', 'details': response.text}), response.status_code
+    except Exception as e:
+        print(f"Error in update_product: {e}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/delete-product/<product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    """Handle deleting a product."""
+    try:
+        if not product_id:
+            return jsonify({'error': 'Product ID is required'}), 400
+
+        # Send the delete request to the external API
+        response = requests.delete(f"{API_BASE_URL}/api/padeliver-product", json={"product_id": product_id})
+        if response.status_code == 200:
+            response_data = response.json()
+            return jsonify({'success': True, 'message': response_data.get('message', 'Product deleted successfully')}), 200
+        else:
+            response_data = response.json()
+            return jsonify({'error': response_data.get('message', 'Failed to delete product')}), response.status_code
+    except Exception as e:
+        print(f"Error in delete_product: {e}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
