@@ -14,6 +14,14 @@ document.addEventListener("DOMContentLoaded", function () {
     Cancelled: document.getElementById("cancelled-orders"),
   };
 
+  const tabCounts = {
+    Preparing: document.getElementById("preparing-count"),
+    Shipped: document.getElementById("shipped-count"),
+    Delivered: document.getElementById("delivered-count"),
+    Received: document.getElementById("received-count"),
+    Cancelled: document.getElementById("cancelled-count"),
+  };
+
   const paginations = {
     Preparing: document.getElementById("preparing-pagination"),
     Shipped: document.getElementById("transport-pagination"),
@@ -61,12 +69,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const start = (page - 1) * ordersPerPage;
     const end = start + ordersPerPage;
 
+    // Clear the section
     section.innerHTML = "";
+
+    // Display orders for the current page
     orders.slice(start, end).forEach((order) => {
       const card = createOrderCard(order);
       section.appendChild(card);
     });
 
+    // Update the tab count
+    const tabCount = tabCounts[status];
+    if (tabCount) {
+      tabCount.textContent = orders.length;
+    }
+
+    // Add pagination controls
     const totalPages = Math.ceil(orders.length / ordersPerPage);
     addPaginationControls(pagination, status, page, totalPages);
   }
@@ -109,6 +127,11 @@ document.addEventListener("DOMContentLoaded", function () {
         ${
           order.status === "Preparing"
             ? `<button class="btn btn-danger btn-sm mt-2" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
+            : ""
+        }
+        ${
+          order.status === "Delivered"
+            ? `<button class="btn btn-success btn-sm mt-2" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Generate Receipt</button>`
             : ""
         }
       </div>
@@ -235,6 +258,34 @@ document.addEventListener("DOMContentLoaded", function () {
         throw error; // Re-throw the error to be handled by the caller
       });
   }
+
+  window.generateReceipt = function (orderId, customerName) {
+    if (!confirm("Do you confirm that the order is received and generate a receipt for this order?")) return;
+
+    const payload = {
+        order_id: orderId,
+        customer_name: customerName,
+    };
+
+    fetch("/api/orders/generate-receipt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                alert(data.message || "Receipt generated successfully.");
+                fetchOrders(); // Re-fetch orders to update the UI
+            } else {
+                alert(data.error || "Failed to generate receipt.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error generating receipt:", error);
+            alert("An error occurred while generating the receipt.");
+        });
+  };
 
   fetchOrders();
 });
