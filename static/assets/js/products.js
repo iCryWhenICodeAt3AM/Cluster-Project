@@ -35,25 +35,26 @@ document.addEventListener("DOMContentLoaded", function() {
         filteredProducts.forEach(product => {
           const brandImage = `${product.brand}.jpg`;
           const productCard = `
-            <div class="col-md-6 mb-4">
-              <div class="card food-item h-100" data-product-id="${product.product_id}">
-                <div class="row g-0">
-                  <div class="col-4">
-                    <img src="../static/assets/${brandImage}" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
-                  </div>
-                  <div class="col-8">
-                    <div class="card-body">
-                      <h5 class="card-title">${product.item}</h5>
-                      <p class="card-text text-muted small">${product.product_description}</p>
-                      <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">Php ${product.price}</span>
-                        <button class="btn btn-sm btn-primary">Add</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        <div class="col-md-6 mb-4">
+          <div class="card food-item h-100 d-flex flex-column" data-product-id="${product.product_id}">
+        <div class="row g-0 flex-grow-1">
+          <div class="col-4">
+            <img src="../static/assets/${brandImage}" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
+          </div>
+          <div class="col-8 d-flex flex-column">
+            <div class="card-body d-flex flex-column flex-grow-1">
+          <h5 class="card-title">${product.item}</h5>
+          <p class="card-text text-muted small">${product.product_description}</p>
+          <p class="card-text text-muted small">Stock: ${product.stock}</p>
+          <div class="mt-auto d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Php ${product.price}</span>
+            <button class="btn btn-sm btn-primary">Add</button>
+          </div>
             </div>
+          </div>
+        </div>
+          </div>
+        </div>
           `;
           menu.insertAdjacentHTML("beforeend", productCard);
         });
@@ -68,17 +69,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const categories = [...new Set(brandProducts.map(product => product.category))].slice(0, 3);
         const brandImage = brand + ".jpg";
         const restaurantCard = `
-          <div class="col-md-4 col-sm-6">
+          <div class="col-md-2 col-sm-4">
             <div class="card restaurant-card h-100 shadow-sm">
               <a href="/restaurant.html?restaurant=${brand}">
-                <img src="../static/assets/${brandImage}" class="card-img-top" alt="${brand}" style="width: 100%; height: auto;">
+          <img src="../static/assets/${brandImage}" class="card-img-top" alt="${brand}" style="object-fit: contain; margin: auto;">
               </a>
               <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <h5 class="card-title mb-0">${brand}</h5>
-                  <span class="badge bg-secondary">${brandProducts.length} items</span>
-                </div>
-                <p class="card-text text-muted small">${categories.join(' • ')}</p>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">${brand}</h5>
+            <span class="badge bg-secondary">${brandProducts.length} items</span>
+          </div>
+          <p class="card-text text-muted small">${categories.join(' • ')}</p>
               </div>
             </div>
           </div>

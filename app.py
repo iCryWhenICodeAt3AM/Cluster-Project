@@ -31,11 +31,13 @@ if not API_BASE_URL:
 
 @app.route('/')
 def hello_world():
-    return render_template('index.html', web_chat_token=os.getenv('WEB_CHAT_TOKEN'), web_host_url=os.getenv('WEB_HOST_URL'), unique_site_id=os.getenv('UNIQUE_SITE_ID'), api_base_url=API_BASE_URL)
+    """Render the index page."""
+    return render_template('index.html')
 
 @app.route('/restaurant.html')
 def restaurant_page():
-    return render_template('restaurant.html', web_chat_token=os.getenv('WEB_CHAT_TOKEN'), web_host_url=os.getenv('WEB_HOST_URL'), unique_site_id=os.getenv('UNIQUE_SITE_ID'), api_base_url=API_BASE_URL)
+    """Render the restaurant page."""
+    return render_template('restaurant.html')
 
 @app.route('/signin.html', methods=['GET', 'POST'])
 def signin():
@@ -75,12 +77,16 @@ def dashboard():
 @app.route('/api/products')
 def get_products():
     try:
-        response = padeliver_table.scan()
-        products = response.get('Items', [])
-        return jsonify(products)
+        # Use the external API URL to fetch products
+        response = requests.get(f"{API_BASE_URL}/api/padeliver-products-with-stock")
+        if response.status_code == 200:
+            products = response.json()
+            return jsonify(products), 200
+        else:
+            return jsonify({'error': 'Failed to fetch products'}), response.status_code
     except Exception as e:
         print(f"Error fetching products: {e}")
-        return jsonify([])
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 @app.route('/api/cart/<user_id>', methods=['GET', 'POST'])
 def cart(user_id):
@@ -224,10 +230,7 @@ def update_product():
         if 'category' in product_data and product_data['category']:
             payload['category'] = product_data['category']
         if 'price' in product_data:
-            try:
-                payload['price'] = float(product_data['price'])
-            except ValueError:
-                return jsonify({'error': 'Invalid price format. Must be a number.'}), 400
+            payload['price'] = product_data['price']
         if 'brand' in product_data and product_data['brand']:
             payload['brand'] = product_data['brand']
         if 'description' in product_data and product_data['description']:
@@ -265,6 +268,37 @@ def delete_product(product_id):
             return jsonify({'error': response_data.get('message', 'Failed to delete product')}), response.status_code
     except Exception as e:
         print(f"Error in delete_product: {e}")
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/add-inventory', methods=['POST'])
+def add_inventory():
+    """Handle adding or removing inventory for a product."""
+    try:
+        inventory_data = request.json
+        if not inventory_data:
+            return jsonify({'error': 'Missing inventory data'}), 400
+
+        # Validate required fields
+        if 'product_id' not in inventory_data or not inventory_data['product_id']:
+            return jsonify({'error': 'Missing or invalid product_id'}), 400
+        if 'quantity' not in inventory_data or not isinstance(inventory_data['quantity'], int):
+            return jsonify({'error': 'Invalid quantity. Must be an integer.'}), 400
+        if inventory_data['quantity'] == 0:
+            return jsonify({'error': 'Quantity cannot be zero.'}), 400
+        if 'remark' not in inventory_data or not inventory_data['remark']:
+            return jsonify({'error': 'Remark is required.'}), 400
+
+        # Log the payload for debugging purposes
+        print(f"Inventory update payload: {inventory_data}")
+
+        # Send the inventory data to the external API
+        response = requests.post(f"{API_BASE_URL}/api/padeliver-inventory", json=inventory_data)
+        if response.status_code == 200:
+            return jsonify({'success': True, 'message': 'Inventory updated successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to update inventory', 'details': response.text}), response.status_code
+    except Exception as e:
+        print(f"Error in add_inventory: {e}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
 if __name__ == '__main__':
