@@ -40,12 +40,32 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function addToCart(product) {
+    console.log("Attempting to add product to cart:", product);
+
     const quantity = parseInt(prompt("Enter quantity:", "1"));
     if (isNaN(quantity) || quantity <= 0) {
       alert("Invalid quantity. Please enter a positive number.");
+      console.log("Invalid quantity entered:", quantity);
       return;
     }
+
+    // Check if the product already exists in the cart
+    const existingProduct = cart.find(item => item.product_id === product.product_id);
+    const currentQuantity = existingProduct ? existingProduct.quantity : 0;
+
+    console.log(`Current quantity in cart: ${currentQuantity}, Requested quantity: ${quantity}, Stock: ${product.stock}`);
+
+    // Ensure the total quantity does not exceed the product's stock
+    if (currentQuantity + quantity > parseInt(product.stock)) {
+      alert(`Cannot add ${quantity} more items. Only ${product.stock - currentQuantity} left in stock.`);
+      console.log(`Add to cart failed: Exceeds stock. Available: ${product.stock - currentQuantity}`);
+      return;
+    }
+
+    // Add the new quantity to the product
     product.quantity = quantity;
+
+    console.log("Sending product to server:", product);
 
     fetch(`/api/cart/${userId}`, {
       method: 'POST',
@@ -54,20 +74,24 @@ document.addEventListener("DOMContentLoaded", function() {
       },
       body: JSON.stringify(product)
     })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then(() => {
-      // Fetch the updated cart and reload the display
-      fetchCart();
-    })
-    .catch(error => {
-      console.error('Error adding to cart:', error);
-      alert('An error occurred while adding the item to the cart. Please try again.');
-    });
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(data => {
+            console.error("Server error response:", data);
+            throw new Error(data.error || `Server error: ${response.statusText}`);
+          });
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Server response:", data);
+        alert(data.message || 'Item added to cart successfully!');
+        fetchCart(); // Fetch the updated cart and reload the display
+      })
+      .catch(error => {
+        console.error('Error adding to cart:', error);
+        alert('An error occurred while adding the item to the cart. Please try again.');
+      });
   }
 
   function updateQuantity(productId, change) {
@@ -107,7 +131,8 @@ document.addEventListener("DOMContentLoaded", function() {
         product_id: productCard.dataset.productId,
         item: productCard.querySelector('.card-title').textContent,
         description: productCard.querySelector('.card-text').textContent,
-        price: parseFloat(productCard.querySelector('.fw-bold').textContent.replace('Php', ''))
+        price: parseFloat(productCard.querySelector('.fw-bold').textContent.replace('Php', '')),
+        stock: parseInt(productCard.dataset.productStock) || 0 // Add stock from data attribute with fallback
       };
       addToCart(product);
     }
@@ -116,4 +141,31 @@ document.addEventListener("DOMContentLoaded", function() {
   window.updateQuantity = updateQuantity; // Make updateQuantity function globally accessible
 
   fetchCart(); // Fetch the cart when the page loads
+
+  document.getElementById('place-order-button').addEventListener('click', () => {
+    const userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+      alert('User not signed in. Redirecting to sign-in page.');
+      window.location.href = '/signin.html';
+      return;
+    }
+  
+    fetch(`/api/cart/${userId}/place-order`, { method: 'POST' })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert(data.message || 'Order placed successfully!');
+        sessionStorage.setItem('cart', JSON.stringify([])); // Clear cart in session storage
+        document.getElementById('cart').innerHTML = ''; // Clear cart display
+        document.getElementById('cart-total').textContent = 'Php 0.00'; // Reset total
+      })
+      .catch(error => {
+        console.error('Error during order placement:', error);
+        alert('An error occurred while placing the order. Please try again.');
+      });
+  });
 });

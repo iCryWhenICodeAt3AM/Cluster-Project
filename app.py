@@ -157,21 +157,21 @@ def logout():
     session.clear()  # Clear the session
     return jsonify({"message": "Logged out successfully", "redirect": "/signin.html"}), 200
 
-@app.route('/api/cart/<user_id>/checkout', methods=['POST'])
-def checkout(user_id):
-    """Handle the checkout process for a user."""
+@app.route('/api/cart/<user_id>/place-order', methods=['POST'])
+def place_order(user_id):
+    """Handle the place order process for a user."""
     try:
-        # Send a POST request to the checkout endpoint
-        response = requests.post(f"{API_BASE_URL}/api/cart/{user_id}/checkout")
+        # Send a POST request to the place order endpoint
+        response = requests.post(f"{API_BASE_URL}/api/cart/{user_id}/place-order")
         if response.status_code == 200:
-            checkout_data = response.json()
-            print(f"Checkout successful for user {user_id}: {checkout_data}")
-            return jsonify(checkout_data), 200
+            order_data = response.json()
+            print(f"Order placed successfully for user {user_id}: {order_data}")
+            return jsonify(order_data), 200
         else:
-            print(f"Checkout failed for user {user_id}: {response.status_code} - {response.text}")
-            return jsonify({'error': 'Failed to process checkout'}), response.status_code
+            print(f"Order placement failed for user {user_id}: {response.status_code} - {response.text}")
+            return jsonify({'error': 'Failed to process order'}), response.status_code
     except Exception as e:
-        print(f"Error during checkout: {e}")
+        print(f"Error during order placement: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/dashboard/padeliver-products-with-stock', methods=['GET'])
@@ -317,6 +317,83 @@ def get_inventory():
             return jsonify({'error': 'Failed to fetch inventory'}), response.status_code
     except Exception as e:
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/padeliver-inventory', methods=['POST'])
+def update_inventory():
+    """Handle inventory updates when an order is canceled."""
+    try:
+        data = request.json
+        if not data or not all(key in data for key in ("product_id", "quantity", "remark")):
+            return jsonify({"error": "Invalid payload"}), 400
+
+        # Prepare the payload for the external API
+        payload = {
+            "product_id": data["product_id"],
+            "quantity": data["quantity"],
+            "remark": data["remark"]
+        }
+
+        # Send the request to the external API
+        response = requests.post(f"{API_BASE_URL}/api/padeliver-inventory", json=payload)
+
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to update inventory", "details": response.text}), response.status_code
+
+        return jsonify({"success": True, "message": "Inventory updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred", "details": str(e)}), 500
+
+@app.route('/my_orders.html')
+def my_orders():
+    """Render the My Orders page."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized access'}), 403
+    return render_template('my_orders.html')
+
+@app.route('/api/orders/<user_id>', methods=['GET'])
+def get_user_orders(user_id):
+    """Fetch user orders from the external API."""
+    try:
+        response = requests.get(f"{API_BASE_URL}/api/orders/{user_id}")
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to fetch orders'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/orders/update-status', methods=['PATCH'])
+def update_order_status():
+    """Update the status of an order."""
+    try:
+        # Get the user_id from the session
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Unauthorized access'}), 403
+
+        # Get the request payload
+        data = request.json
+        if not data or 'order_id' not in data or 'status' not in data:
+            return jsonify({'error': 'Invalid payload. "order_id" and "status" are required.'}), 400
+
+        # Prepare the payload for the external API
+        payload = {
+            "order_id": data["order_id"],
+            "customer_name": user_id,
+            "status": data["status"]
+        }
+
+        # Send the PATCH request to the external API
+        response = requests.patch(f"{API_BASE_URL}/api/orders/update-status", json=payload)
+
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to update order status", "details": response.text}), response.status_code
+
+        return jsonify({"success": True, "message": "Order status updated successfully"}), 200
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred", "details": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
