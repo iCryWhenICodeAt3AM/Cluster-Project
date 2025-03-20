@@ -1,0 +1,448 @@
+<!-- filepath: d:\Projects\OJT Projects\Cluster-Project\templates\delivery.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Interface</title>
+    <link rel="stylesheet" href="../static/assets/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
+            <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <img src="../static/assets/logo.png" alt="Logo" style="width: 40px; height: 40px; margin-right: 10px;">
+                Pa-deliver
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="#">Promotions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About</a>
+                </li> -->
+                <!-- <li class="nav-item">
+                    <a class="nav-link" href="/my_orders.html">My Orders</a>
+                </li> -->
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="me-3" id="user-greeting"></span>
+                    <button class="btn btn-outline-secondary me-2" id="logout-button">Logout</button>
+                </div>
+            </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Delivery Interface</h1>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <input type="text" id="search-input" class="form-control" placeholder="Search by Order ID or Customer Name">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="filterOrders()">Search</button>
+            </div>
+        </div>
+        <ul class="nav nav-tabs" id="delivery-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="all-orders-tab" data-bs-toggle="tab" data-bs-target="#all-orders" type="button" role="tab" aria-controls="all-orders" aria-selected="true">
+                    All Orders <span class="badge bg-secondary" id="all-orders-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="preparing-tab" data-bs-toggle="tab" data-bs-target="#preparing" type="button" role="tab" aria-controls="preparing" aria-selected="false">
+                    Preparing <span class="badge bg-secondary" id="preparing-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping" type="button" role="tab" aria-controls="shipping" aria-selected="false">
+                    Shipping <span class="badge bg-secondary" id="shipping-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="delivered-tab" data-bs-toggle="tab" data-bs-target="#delivered" type="button" role="tab" aria-controls="delivered" aria-selected="false">
+                    Delivered <span class="badge bg-secondary" id="delivered-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab" aria-controls="cancelled" aria-selected="false">
+                    Cancelled <span class="badge bg-secondary" id="cancelled-count">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="received-tab" data-bs-toggle="tab" data-bs-target="#received" type="button" role="tab" aria-controls="received" aria-selected="false">
+                    Received <span class="badge bg-secondary" id="received-count">0</span>
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content mt-4" id="delivery-tabs-content">
+            <div class="tab-pane fade show active" id="all-orders" role="tabpanel" aria-labelledby="all-orders-tab">
+                <div id="all-orders-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-orders-table-body">
+                            <!-- All orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="preparing" role="tabpanel" aria-labelledby="preparing-tab">
+                <div id="preparing-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preparing-table-body">
+                            <!-- Preparing orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="shipping" role="tabpanel" aria-labelledby="shipping-tab">
+                <div id="shipping-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shipping-table-body">
+                            <!-- Shipping orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="delivered" role="tabpanel" aria-labelledby="delivered-tab">
+                <div id="delivered-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="delivered-table-body">
+                            <!-- Delivered orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+                <div id="cancelled-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cancelled-table-body">
+                            <!-- Cancelled orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="received" role="tabpanel" aria-labelledby="received-tab">
+                <div id="received-container" class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="received-table-body">
+                            <!-- Received orders will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Modal for Order Details -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Order ID:</strong> <span id="modal-order-id"></span></p>
+                    <p><strong>Customer Name:</strong> <span id="modal-customer-name"></span></p>
+                    <p><strong>Order Date:</strong> <span id="modal-order-date"></span></p>
+                    <h6>Items:</h6>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-items-table-body">
+                            <!-- Items will be dynamically loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Logout functionality
+        document.getElementById('logout-button').addEventListener('click', function () {
+            fetch('/logout', { method: 'GET' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Logged out successfully!');
+                    sessionStorage.clear(); // Clear session storage
+                    window.location.href = data.redirect || '/signin.html'; // Redirect to sign-in page
+                })
+                .catch(error => console.error('Error during logout:', error));
+        });
+
+        // Filter orders based on search input across all tabs
+        function filterOrders() {
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+
+            // Get all table bodies for each tab
+            const tableBodies = [
+                document.getElementById('all-orders-table-body'),
+                document.getElementById('preparing-table-body'),
+                document.getElementById('shipping-table-body'),
+                document.getElementById('delivered-table-body'),
+                document.getElementById('cancelled-table-body'),
+                document.getElementById('received-table-body')
+            ];
+
+            // Apply the filter to each table body
+            tableBodies.forEach(tableBody => {
+                const rows = tableBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const orderId = row.cells[0].textContent.toLowerCase();
+                    const customerName = row.cells[2].textContent.toLowerCase();
+
+                    if (orderId.includes(searchInput) || customerName.includes(searchInput)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Fetch orders for delivery
+        async function fetchOrders() {
+            try {
+                const response = await fetch('/api/orders');
+                const data = await response.json();
+                if (response.ok) {
+                    displayOrders(data.orders);
+                } else {
+                    console.error('Error fetching orders:', data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+            }
+        }
+
+        // Display orders in respective tabs and update tab counts
+        function displayOrders(orders) {
+            const allOrdersBody = document.getElementById('all-orders-table-body');
+            const preparingBody = document.getElementById('preparing-table-body');
+            const shippingBody = document.getElementById('shipping-table-body');
+            const deliveredBody = document.getElementById('delivered-table-body');
+            const cancelledBody = document.getElementById('cancelled-table-body');
+            const receivedBody = document.getElementById('received-table-body');
+
+            // Clear existing content
+            allOrdersBody.innerHTML = '';
+            preparingBody.innerHTML = '';
+            shippingBody.innerHTML = '';
+            deliveredBody.innerHTML = '';
+            cancelledBody.innerHTML = '';
+            receivedBody.innerHTML = '';
+
+            // Initialize counters
+            let allOrdersCount = 0;
+            let preparingCount = 0;
+            let shippingCount = 0;
+            let deliveredCount = 0;
+            let cancelledCount = 0;
+            let receivedCount = 0;
+
+            orders.forEach(order => {
+                const nextStateButton = (order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Received') 
+                    ? `<button class="btn btn-primary btn-sm" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">Next State</button>` 
+                    : '';
+
+                const row = `
+                    <tr>
+                        <td>${order.order_id}</td>
+                        <td>${new Date(order.order_datetime).toLocaleString()}</td>
+                        <td>${order.customer_name}</td>
+                        <td>${order.status}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>Details</button>
+                            ${nextStateButton}
+                        </td>
+                    </tr>
+                `;
+
+                // Add to respective tab and increment counters
+                allOrdersBody.innerHTML += row;
+                allOrdersCount++;
+                if (order.status === 'Preparing') {
+                    preparingBody.innerHTML += row;
+                    preparingCount++;
+                }
+                if (order.status === 'Shipped') {
+                    shippingBody.innerHTML += row;
+                    shippingCount++;
+                }
+                if (order.status === 'Delivered') {
+                    deliveredBody.innerHTML += row;
+                    deliveredCount++;
+                }
+                if (order.status === 'Cancelled') {
+                    cancelledBody.innerHTML += row;
+                    cancelledCount++;
+                }
+                if (order.status === 'Received') {
+                    receivedBody.innerHTML += row;
+                    receivedCount++;
+                }
+            });
+
+            // Update tab counts
+            document.getElementById('all-orders-count').textContent = allOrdersCount;
+            document.getElementById('preparing-count').textContent = preparingCount;
+            document.getElementById('shipping-count').textContent = shippingCount;
+            document.getElementById('delivered-count').textContent = deliveredCount;
+            document.getElementById('cancelled-count').textContent = cancelledCount;
+            document.getElementById('received-count').textContent = receivedCount;
+        }
+
+        // Update order status
+        async function updateOrderStatus(orderId, currentStatus, customerName) {
+            const nextState = {
+                'Preparing': 'Shipped',
+                'Shipped': 'Delivered'
+            }[currentStatus];
+
+            if (!nextState) {
+                alert('Order is already delivered.');
+                return;
+            }
+
+            const payload = {
+                order_id: orderId,
+                status: nextState,
+                customer_name: customerName // Include customer_name in the payload
+            };
+
+            try {
+                const response = await fetch(`/api/orders/update-status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert('Order status updated successfully.');
+                    fetchOrders();
+                } else {
+                    const error = await response.json();
+                    alert(error.message || 'Failed to update order status.');
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+            }
+        }
+
+        // Show order details in a modal
+        function showOrderDetails(orderId, items, customerName, orderDate) {
+            let parsedItems;
+
+            // Attempt to parse the items JSON
+            try {
+                const decodedItems = decodeURIComponent(items);
+                parsedItems = JSON.parse(decodedItems);
+            } catch (error) {
+                console.error('Error parsing items JSON:', error);
+                alert('Failed to load order details due to invalid data.');
+                return;
+            }
+
+            // Populate modal fields
+            document.getElementById('modal-order-id').textContent = orderId;
+            document.getElementById('modal-customer-name').textContent = customerName;
+            document.getElementById('modal-order-date').textContent = new Date(orderDate).toLocaleString();
+
+            // Populate items table
+            const itemsTableBody = document.getElementById('modal-items-table-body');
+            itemsTableBody.innerHTML = ''; // Clear existing content
+            parsedItems.forEach(item => {
+                const row = `
+                    <tr>
+                        <td>${item.item}</td>
+                        <td>${item.description}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.price} PHP</td>
+                    </tr>
+                `;
+                itemsTableBody.innerHTML += row;
+            });
+
+            // Show the modal
+            const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            orderDetailsModal.show();
+        }
+
+        // Load orders on page load
+        document.addEventListener('DOMContentLoaded', fetchOrders);
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

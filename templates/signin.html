@@ -179,6 +179,16 @@
                 payload.key_code = keyCode;
             }
 
+            // If the username is "delivery", prompt for the key code
+            if (username === 'delivery') {
+                const keyCode = prompt('Enter the key code:');
+                if (!keyCode) {
+                    alert('Key code is required.');
+                    return;
+                }
+                payload.key_code = keyCode;
+            }
+
             // Send the POST request to the server
             try {
                 const response = await fetch('/signin.html', {

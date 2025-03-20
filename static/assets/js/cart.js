@@ -162,10 +162,29 @@ document.addEventListener("DOMContentLoaded", function() {
         sessionStorage.setItem('cart', JSON.stringify([])); // Clear cart in session storage
         document.getElementById('cart').innerHTML = ''; // Clear cart display
         document.getElementById('cart-total').textContent = 'Php 0.00'; // Reset total
+        fetchCart(); // Re-fetch the cart
+        fetchProducts(); // Re-fetch products to update stock availability
       })
       .catch(error => {
         console.error('Error during order placement:', error);
         alert('An error occurred while placing the order. Please try again.');
       });
   });
+
+  function fetchProducts() {
+    fetch('/api/products')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Products fetched successfully:', data);
+        // Update the product list UI here if necessary
+      })
+      .catch(error => {
+        console.error('Error fetching products:', error);
+      });
+  }
 });

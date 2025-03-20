@@ -9,7 +9,7 @@ load_dotenv()
 venv_path = os.path.join(os.path.dirname(__file__), 'venv', 'Lib', 'site-packages')
 sys.path.append(venv_path)
 
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request, session, redirect
 import boto3
 import requests
 
@@ -61,6 +61,16 @@ def signin():
             session['user_id'] = username
             return jsonify({'redirect': '/dashboard'}), 200
 
+        # Check if username is "delivery"
+        if username == 'delivery':
+            key_code = request.json.get('key_code', '')
+            if not key_code:
+                return jsonify({'error': 'Key code is required for delivery.'}), 400
+            if key_code != 'hello':
+                return jsonify({'error': 'Invalid key code. Access denied.'}), 403
+            session['user_id'] = username
+            return jsonify({'redirect': '/delivery.html'}), 200
+
         # Store username in session and redirect other users to the index page
         session['user_id'] = username
         return jsonify({'redirect': '/'}), 200
@@ -73,6 +83,13 @@ def dashboard():
     if 'user_id' not in session or session['user_id'] != 'admin':
         return jsonify({'error': 'Unauthorized access'}), 403
     return render_template('dashboard.html')
+
+@app.route('/delivery.html', methods=['GET'])
+def delivery():
+    """Render the delivery interface."""
+    if 'user_id' not in session or session['user_id'] != 'delivery':
+        return redirect('/signin.html')
+    return render_template('delivery.html')
 
 @app.route('/api/products')
 def get_products():
@@ -334,7 +351,7 @@ def update_inventory():
         }
 
         # Send the request to the external API
-        response = requests.post(f"{API_BASE_URL}/api/padeliver-inventory", json=payload)
+        response = requests.post(f"{API_BASE_URL}/inventory/update", json=payload)
 
         if response.status_code != 200:
             return jsonify({"error": "Failed to update inventory", "details": response.text}), response.status_code
@@ -367,10 +384,15 @@ def get_user_orders(user_id):
 def update_order_status():
     """Update the status of an order."""
     try:
-        # Get the user_id from the session
-        user_id = session.get('user_id')
+        # Check if the payload contains customer_id
+        data = request.json
+        user_id = data.get('customer_name')
+
+        # If customer_id is not provided, fallback to session user_id
         if not user_id:
-            return jsonify({'error': 'Unauthorized access'}), 403
+            user_id = session.get('user_id')
+            if not user_id:
+                return jsonify({'error': 'Unauthorized access'}), 403
 
         # Get the request payload
         data = request.json
@@ -394,6 +416,54 @@ def update_order_status():
 
     except Exception as e:
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
+
+@app.route('/api/orders/<int:order_id>', methods=['PUT'])
+def update_order(order_id):
+    """Update the status of an order."""
+    data = request.json
+    new_status = data.get('status')
+
+    # Validate new status
+    if new_status not in ['Preparing', 'Shipping', 'Delivered']:
+        return jsonify({'error': 'Invalid status.'}), 400
+
+    # Example logic; replace with database update
+    # Update order in database here...
+
+    return jsonify({'message': 'Order status updated successfully.'})
+
+@app.route('/api/orders', methods=['GET'])
+def get_orders():
+    """Fetch all orders from the hosted external API with optional pagination, search, and sorting."""
+    try:
+        # Fetch orders from the external API
+        response = requests.get(f"{API_BASE_URL}/api/orders")
+
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to fetch orders from the external API'}), response.status_code
+    except Exception as e:
+        print(f"Error fetching orders: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/orders/generate-receipt', methods=['POST'])
+def generate_receipt():
+    """Generate a receipt for a delivered order."""
+    try:
+        data = request.json
+        if not data or 'order_id' not in data or 'customer_name' not in data:
+            return jsonify({'error': 'Invalid payload. "order_id" and "customer_name" are required.'}), 400
+
+        # Forward the payload to the external API
+        response = requests.post(f"{API_BASE_URL}/api/orders/generate-receipt", json=data)
+
+        if response.status_code == 200:
+            return jsonify({'success': True, 'message': 'Receipt generated successfully'}), 200
+        else:
+            return jsonify({'error': 'Failed to generate receipt', 'details': response.text}), response.status_code
+    except Exception as e:
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
