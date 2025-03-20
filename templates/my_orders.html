@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/assets/css/styles.css">
+</head>
+<body>
+  {% include 'components/header.html' %}
+
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">My Orders</h1>
+    <ul class="nav nav-tabs" id="order-tabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="preparing-tab" data-bs-toggle="tab" href="#preparing" role="tab" aria-controls="preparing" aria-selected="true">Preparing</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="shipped-tab" data-bs-toggle="tab" href="#shipped" role="tab" aria-controls="shipped" aria-selected="false">Shipped</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="delivered-tab" data-bs-toggle="tab" href="#delivered" role="tab" aria-controls="delivered" aria-selected="false">Delivered</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="received-tab" data-bs-toggle="tab" href="#received" role="tab" aria-controls="received" aria-selected="false">Received</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="cancelled-tab" data-bs-toggle="tab" href="#cancelled" role="tab" aria-controls="cancelled" aria-selected="false">Cancelled</a>
+      </li>
+    </ul>
+    <div class="tab-content mt-4">
+      <div class="tab-pane fade show active" id="preparing" role="tabpanel" aria-labelledby="preparing-tab">
+        <div id="preparing-orders" class="order-section border p-3 rounded"></div>
+        <div id="preparing-pagination" class="pagination-controls mt-3"></div>
+      </div>
+      <div class="tab-pane fade" id="shipped" role="tabpanel" aria-labelledby="shipped-tab">
+        <div id="transport-orders" class="order-section border p-3 rounded"></div>
+        <div id="transport-pagination" class="pagination-controls mt-3"></div>
+      </div>
+      <div class="tab-pane fade" id="delivered" role="tabpanel" aria-labelledby="delivered-tab">
+        <div id="delivered-orders" class="order-section border p-3 rounded"></div>
+        <div id="delivered-pagination" class="pagination-controls mt-3"></div>
+      </div>
+      <div class="tab-pane fade" id="received" role="tabpanel" aria-labelledby="received-tab">
+        <div id="received-orders" class="order-section border p-3 rounded"></div>
+        <div id="received-pagination" class="pagination-controls mt-3"></div>
+      </div>
+      <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
+        <div id="cancelled-orders" class="order-section border p-3 rounded"></div>
+        <div id="cancelled-pagination" class="pagination-controls mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="order-details-modal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Order details will be dynamically inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include 'components/footer.html' %}
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script src="../static/assets/js/my_orders.js"></script>
+</body>
+</html>
