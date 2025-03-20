@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function() {
   fetch("/api/products")
     .then(response => response.json())
     .then(products => {
-      const restaurantProducts = products.filter(product => product.brand === restaurant);
+      const restaurantProducts = products.filter(product => product.brand === restaurant && product.stock > 0); // Filter out products with stock = 0
       const categories = ["All", ...new Set(restaurantProducts.map(product => product.category))];
       const categoryButtons = document.getElementById("category-buttons");
       let activeButton = null;
@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function() {
         menu.innerHTML = "";
         const filteredProducts = category === "All" ? restaurantProducts : restaurantProducts.filter(product => product.category === category);
         filteredProducts.forEach(product => {
+          if (product.stock === 0) return; // Skip products with stock = 0
           const productCard = `
         <div class="col-md-6 mb-4">
           <div class="card food-item h-100 d-flex flex-column" data-product-id="${product.product_id}">
@@ -69,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const restaurantDropdown = document.getElementById("restaurant-dropdown");
       const brands = [...new Set(products.map(product => product.brand))];
       brands.forEach(brand => {
-        const brandProducts = products.filter(product => product.brand === brand);
+        const brandProducts = products.filter(product => product.brand === brand && product.stock > 0); // Filter out products with stock = 0
         const categories = [...new Set(brandProducts.map(product => product.category))].slice(0, 3);
         const brandImage = brand + ".jpg";
         const restaurantCard = `

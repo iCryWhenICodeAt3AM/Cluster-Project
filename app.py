@@ -301,5 +301,22 @@ def add_inventory():
         print(f"Error in add_inventory: {e}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 
+@app.route('/api/inventory', methods=['GET'])
+def get_inventory():
+    """Fetch inventory data from the external API."""
+    try:
+        # External API URL
+        api_url = f"{API_BASE_URL}/api/inventory"
+        
+        # Make the GET request to the external API
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            inventory = response.json()
+            return jsonify(inventory), 200
+        else:
+            return jsonify({'error': 'Failed to fetch inventory'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

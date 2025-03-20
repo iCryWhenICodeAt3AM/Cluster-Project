@@ -33,7 +33,9 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLowStockProducts = products.filter((product) => product.stock < 30); // Filter low stock products
         updateLowStockProducts();
         updateAllProducts();
-        populateCategories(products); // Dynamically update categories
+        updateDashboardStats(products); // Update dashboard stats
+        populateCategories(products); // Dynamically update categories for modals
+        populateCategoryFilter(products); // Populate category filter dropdown
       })
       .catch((error) => console.error("Error fetching products:", error));
   }
@@ -54,6 +56,22 @@ document.addEventListener("DOMContentLoaded", function () {
         option.textContent = category;
         dropdown.appendChild(option);
       });
+    });
+  }
+
+  // Populate categories dynamically for the filter dropdown
+  function populateCategoryFilter(products) {
+    const categoryFilter = document.getElementById("filter-category");
+    if (!categoryFilter) return;
+
+    const categories = ["All Categories", ...new Set(products.map(product => product.category))];
+    categoryFilter.innerHTML = ""; // Clear existing options
+
+    categories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      categoryFilter.appendChild(option);
     });
   }
 
@@ -234,6 +252,7 @@ document.addEventListener("DOMContentLoaded", function () {
         button.setAttribute("data-order", ascending ? "desc" : "asc");
         currentPageLowStock = 1; // Reset to the first page after sorting
         updateLowStockProducts();
+        updateSortIndicators(sortButtons, currentSortKeyLowStock, currentSortOrderLowStock);
       });
     });
   }
@@ -377,14 +396,17 @@ document.addEventListener("DOMContentLoaded", function () {
     currentSortOrder = ascending ? "asc" : "desc";
     currentPage = 1; // Reset to the first page after sorting
     updateAllProducts();
-    updateSortIndicators();
+
+    // Pass the correct sort buttons to updateSortIndicators
+    const sortButtons = document.querySelectorAll("[data-sort]");
+    updateSortIndicators(sortButtons, currentSortKey, currentSortOrder);
   }
 
   // Update sort indicators
-  function updateSortIndicators() {
-    const sortButtons = document.querySelectorAll("[data-sort]");
-    sortButtons.forEach((button) => {
-      const key = button.getAttribute("data-sort");
+  function updateSortIndicators(sortButtons, currentSortKey, currentSortOrder) {
+    if (!sortButtons) return; // Ensure sortButtons is defined
+    sortButtons.forEach(button => {
+      const key = button.getAttribute("data-sort") || button.getAttribute("data-sort-low-stock") || button.getAttribute("data-sort-inventory");
       if (key === currentSortKey) {
         button.innerHTML = `${button.textContent.trim().replace(/ ▲| ▼/g, "")} ${
           currentSortOrder === "asc" ? "▲" : "▼"
@@ -404,6 +426,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const ascending = button.getAttribute("data-order") === "asc";
         sortProducts(key, ascending);
         button.setAttribute("data-order", ascending ? "desc" : "asc");
+      });
+    });
+  }
+
+  // Attach sorting event listeners for inventory
+  function attachSortingListenersInventory() {
+    const sortButtons = document.querySelectorAll("[data-sort-inventory]");
+    sortButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const key = button.getAttribute("data-sort-inventory");
+        const ascending = button.getAttribute("data-order") === "asc";
+        currentSortKeyInventory = key;
+        currentSortOrderInventory = ascending ? "asc" : "desc";
+        button.setAttribute("data-order", ascending ? "desc" : "asc");
+        currentPageInventory = 1; // Reset to the first page after sorting
+        updateInventoryTable(currentInventory);
+
+        // Pass the correct sort buttons to updateSortIndicators
+        updateSortIndicators(sortButtons, currentSortKeyInventory, currentSortOrderInventory);
       });
     });
   }
@@ -535,10 +576,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Update dashboard stats
+  function updateDashboardStats(products) {
+    const totalProducts = products.length;
+    const lowStockItems = products.filter(product => product.stock < 30).length;
+    const activeProducts = products.filter(product => product.stock > 0).length;
+    const outOfStockItems = products.filter(product => product.stock === 0).length;
+
+    // Update the correct element IDs
+    document.getElementById("total-products").textContent = totalProducts;
+    document.getElementById("low-stock-items").textContent = lowStockItems;
+    document.getElementById("active-products").textContent = activeProducts;
+    document.getElementById("out-of-stock-items").textContent = outOfStockItems;
+  }
+
   // Initial load
   fetchProducts();
   attachSortingListenersLowStock();
   attachSortingListeners();
+  attachSortingListenersInventory();
 
   // Add Product Form Submission
   const addProductForm = document.querySelector("#addProductModal form");
@@ -711,5 +767,374 @@ document.getElementById("products-stock").addEventListener("click", function (e)
         editProductModal.show();
     }
 });
+
+// Add event listeners for search and filter functionality
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("search-products");
+  const categoryFilter = document.getElementById("filter-category");
+  const statusFilter = document.getElementById("filter-status");
+
+  function filterProducts() {
+    const searchQuery = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedStatus = statusFilter.value;
+
+    const filteredProducts = currentProducts.filter(product => {
+      const matchesSearch = product.item.toLowerCase().includes(searchQuery);
+      const matchesCategory = selectedCategory === "All Categories" || product.category === selectedCategory;
+      const matchesStatus =
+        selectedStatus === "All Status" ||
+        (selectedStatus === "Active" && product.stock > 0) ||
+        (selectedStatus === "Inactive" && product.stock === 0);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+
+    currentPage = 1; // Reset to the first page
+    updateFilteredProducts(filteredProducts);
+  }
+
+  function updateFilteredProducts(filteredProducts) {
+    // Clear the current table content
+    productsStockTable.innerHTML = "";
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+    // Populate the table with paginated products
+    paginatedProducts.forEach(product => {
+      const row = document.createElement("tr");
+      const stockBadgeClass = product.stock < 10 ? "bg-danger" : product.stock < 30 ? "bg-warning" : "bg-success";
+      const status = product.stock === 0 ? "Inactive" : "Active";
+      const statusClass = product.stock === 0 ? "status-inactive" : "status-active";
+
+      row.innerHTML = `
+        <td>
+          <div class="d-flex align-items-center">
+            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <div>
+              <h6 class="mb-0">${product.item}</h6>
+              <small class="text-muted">#${product.product_id}</small>
+            </div>
+          </div>
+        </td>
+        <td>${product.category}</td>
+        <td>Php ${product.price.toLocaleString()}</td>
+        <td>
+          <span class="badge ${stockBadgeClass}">${product.stock.toLocaleString()} left</span>
+        </td>
+        <td>
+          <span class="status-indicator ${statusClass}"></span> ${status}
+        </td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      productsStockTable.appendChild(row);
+    });
+
+    // Update pagination controls
+    updatePaginationControls(filteredProducts.length);
+  }
+
+  // Attach event listeners to search and filter inputs
+  searchInput.addEventListener("input", filterProducts);
+  categoryFilter.addEventListener("change", filterProducts);
+  statusFilter.addEventListener("change", filterProducts);
+});
+
+  // Display the current date
+  const currentDateElement = document.getElementById("current-date");
+  if (currentDateElement) {
+    const currentDate = new Date();
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    currentDateElement.textContent = `Today: ${formattedDate}`;
+  }
+
+  // Fix filter functionality
+  const searchInput = document.getElementById("search-products");
+  const categoryFilter = document.getElementById("filter-category");
+  const statusFilter = document.getElementById("filter-status");
+
+  function filterProducts() {
+    const searchQuery = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value;
+    const selectedStatus = statusFilter.value;
+
+    const filteredProducts = currentProducts.filter(product => {
+      const matchesSearch = product.item.toLowerCase().includes(searchQuery);
+      const matchesCategory = selectedCategory === "All Categories" || product.category === selectedCategory;
+      const matchesStatus =
+        selectedStatus === "All Status" ||
+        (selectedStatus === "Active" && product.stock > 0) ||
+        (selectedStatus === "Inactive" && product.stock === 0);
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+
+    currentPage = 1; // Reset to the first page
+    updateFilteredProducts(filteredProducts);
+  }
+
+  function updateFilteredProducts(filteredProducts) {
+    // Clear the current table content
+    productsStockTable.innerHTML = "";
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+    // Populate the table with paginated products
+    paginatedProducts.forEach(product => {
+      const row = document.createElement("tr");
+      const stockBadgeClass = product.stock < 10 ? "bg-danger" : product.stock < 30 ? "bg-warning" : "bg-success";
+      const status = product.stock === 0 ? "Inactive" : "Active";
+      const statusClass = product.stock === 0 ? "status-inactive" : "status-active";
+
+      row.innerHTML = `
+        <td>
+          <div class="d-flex align-items-center">
+            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <div>
+              <h6 class="mb-0">${product.item}</h6>
+              <small class="text-muted">#${product.product_id}</small>
+            </div>
+          </div>
+        </td>
+        <td>${product.category}</td>
+        <td>Php ${product.price.toLocaleString()}</td>
+        <td>
+          <span class="badge ${stockBadgeClass}">${product.stock.toLocaleString()} left</span>
+        </td>
+        <td>
+          <span class="status-indicator ${statusClass}"></span> ${status}
+        </td>
+        <td>
+          <div class="btn-group">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </td>
+      `;
+      productsStockTable.appendChild(row);
+    });
+
+    // Update pagination controls
+    updatePaginationControls(filteredProducts.length);
+  }
+
+  // Attach event listeners to search and filter inputs
+  searchInput.addEventListener("input", filterProducts);
+  categoryFilter.addEventListener("change", filterProducts);
+  statusFilter.addEventListener("change", filterProducts);
+
+  const inventoryTable = document.getElementById("inventory-table");
+  const paginationControlsInventory = document.getElementById("pagination-controls-inventory");
+  const searchInputInventory = document.getElementById("search-inventory");
+  const matchCaseCheckbox = document.getElementById("match-case-checkbox");
+  const startDateInput = document.getElementById("filter-start-date");
+  const endDateInput = document.getElementById("filter-end-date");
+  const stockActionFilter = document.getElementById("filter-stock-action");
+  const itemsPerPageInventory = 10;
+  let currentPageInventory = 1;
+  let currentInventory = [];
+  let currentSortKeyInventory = null;
+  let currentSortOrderInventory = null;
+
+  // Fetch inventory data from the API
+  function fetchInventory() {
+    fetch("/api/inventory")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Error fetching inventory: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(inventory => {
+        currentInventory = inventory;
+        updateInventoryTable(currentInventory); // Ensure inventory is updated
+      })
+      .catch(error => console.error("Error fetching inventory:", error));
+  }
+
+  // Update the inventory table with filtering and pagination
+  function updateInventoryTable(inventory) {
+    const searchQuery = searchInputInventory.value;
+    const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+    const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+    const stockAction = stockActionFilter.value;
+    const matchCase = matchCaseCheckbox.checked;
+
+    // Filter inventory
+    const filteredInventory = inventory.filter(item => {
+      const itemDate = new Date(item.datetime);
+      const matchesSearch = matchCase
+        ? item.product_id === searchQuery
+        : item.product_id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStockAction =
+        stockAction === "All Actions" ||
+        (stockAction === "Stock-in" && item.remark.toLowerCase().includes("stock-in")) ||
+        (stockAction === "Stock-out" && item.remark.toLowerCase().includes("stock-out"));
+      const matchesDate =
+        (!startDate || itemDate >= startDate) &&
+        (!endDate || itemDate <= new Date(endDate.setHours(23, 59, 59, 999))); // Include the entire end date
+
+      return matchesSearch && matchesStockAction && matchesDate;
+    });
+
+    // Sort inventory
+    if (currentSortKeyInventory) {
+      filteredInventory.sort((a, b) => {
+        const aValue = a[currentSortKeyInventory];
+        const bValue = b[currentSortKeyInventory];
+        if (aValue < bValue) return currentSortOrderInventory === "asc" ? -1 : 1;
+        if (aValue > bValue) return currentSortOrderInventory === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // Paginate inventory
+    const startIndex = (currentPageInventory - 1) * itemsPerPageInventory;
+    const endIndex = startIndex + itemsPerPageInventory;
+    const paginatedInventory = filteredInventory.slice(startIndex, endIndex);
+
+    // Clear the table and populate with paginated inventory
+    inventoryTable.innerHTML = "";
+    paginatedInventory.forEach(item => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${item.product_id}</td>
+        <td>${item.quantity}</td>
+        <td>${item.remark}</td>
+        <td>${item.datetime}</td>
+      `;
+      inventoryTable.appendChild(row);
+    });
+
+    // Update pagination controls
+    updatePaginationControlsInventory(filteredInventory.length);
+  }
+
+  // Update pagination controls
+  function updatePaginationControlsInventory(totalItems) {
+    paginationControlsInventory.innerHTML = "";
+
+    const totalPages = Math.ceil(totalItems / itemsPerPageInventory);
+
+    // Previous button
+    if (currentPageInventory > 1) {
+      const prevButton = document.createElement("button");
+      prevButton.className = "btn btn-sm btn-outline-primary me-2";
+      prevButton.textContent = "Previous";
+      prevButton.addEventListener("click", () => {
+        currentPageInventory--;
+        updateInventoryTable(currentInventory);
+      });
+      paginationControlsInventory.appendChild(prevButton);
+    }
+
+    // Page input
+    const pageInput = document.createElement("input");
+    pageInput.type = "number";
+    pageInput.className = "form-control form-control-sm me-2";
+    pageInput.style.width = "60px";
+    pageInput.value = currentPageInventory;
+    pageInput.min = 1;
+    pageInput.max = totalPages;
+    pageInput.addEventListener("change", () => {
+      const page = parseInt(pageInput.value, 10);
+      if (page >= 1 && page <= totalPages) {
+        currentPageInventory = page;
+        updateInventoryTable(currentInventory);
+      } else {
+        pageInput.value = currentPageInventory;
+      }
+    });
+    paginationControlsInventory.appendChild(pageInput);
+
+    // Total pages text
+    const totalPagesText = document.createElement("span");
+    totalPagesText.className = "me-2";
+    totalPagesText.textContent = `of ${totalPages}`;
+    paginationControlsInventory.appendChild(totalPagesText);
+
+    // Next button
+    if (currentPageInventory < totalPages) {
+      const nextButton = document.createElement("button");
+      nextButton.className = "btn btn-sm btn-outline-primary";
+      nextButton.textContent = "Next";
+      nextButton.addEventListener("click", () => {
+        currentPageInventory++;
+        updateInventoryTable(currentInventory);
+      });
+      paginationControlsInventory.appendChild(nextButton);
+    }
+  }
+
+  // Attach event listeners for filters and sorting
+  searchInputInventory.addEventListener("input", () => updateInventoryTable(currentInventory));
+  matchCaseCheckbox.addEventListener("change", () => updateInventoryTable(currentInventory));
+  startDateInput.addEventListener("change", () => updateInventoryTable(currentInventory));
+  endDateInput.addEventListener("change", () => updateInventoryTable(currentInventory));
+  stockActionFilter.addEventListener("change", () => updateInventoryTable(currentInventory));
+
+  document.querySelectorAll("[data-sort-inventory]").forEach(button => {
+    button.addEventListener("click", () => {
+      const sortButtons = document.querySelectorAll("[data-sort-inventory]");
+      const key = button.getAttribute("data-sort-inventory");
+      const ascending = button.getAttribute("data-order") === "asc";
+      currentSortKeyInventory = key;
+      currentSortOrderInventory = ascending ? "asc" : "desc";
+      button.setAttribute("data-order", ascending ? "desc" : "asc");
+      currentPageInventory = 1; // Reset to the first page after sorting
+      updateInventoryTable(currentInventory);
+      updateSortIndicators(sortButtons, currentSortKeyInventory, currentSortOrderInventory);
+    });
+  });
+
+  // Attach sorting event listeners for inventory
+  function attachSortingListenersInventory() {
+    const sortButtons = document.querySelectorAll("[data-sort-inventory]");
+    sortButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const key = button.getAttribute("data-sort-inventory");
+        const ascending = button.getAttribute("data-order") === "asc";
+        currentSortKeyInventory = key;
+        currentSortOrderInventory = ascending ? "asc" : "desc";
+        button.setAttribute("data-order", ascending ? "desc" : "asc");
+        currentPageInventory = 1; // Reset to the first page after sorting
+        updateInventoryTable(currentInventory);
+
+        // Pass the correct sort buttons to updateSortIndicators
+        updateSortIndicators(sortButtons, currentSortKeyInventory, currentSortOrderInventory);
+      });
+    });
+  }
+
+  // Ensure attachSortingListenersInventory is called
+  attachSortingListenersInventory();
+
+  // Initial fetch
+  fetchInventory();
 
 });
