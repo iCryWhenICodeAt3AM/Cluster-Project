@@ -396,11 +396,15 @@ document.addEventListener("DOMContentLoaded", function () {
     currentSortOrder = ascending ? "asc" : "desc";
     currentPage = 1; // Reset to the first page after sorting
     updateAllProducts();
-    updateSortIndicators();
+
+    // Pass the correct sort buttons to updateSortIndicators
+    const sortButtons = document.querySelectorAll("[data-sort]");
+    updateSortIndicators(sortButtons, currentSortKey, currentSortOrder);
   }
 
   // Update sort indicators
   function updateSortIndicators(sortButtons, currentSortKey, currentSortOrder) {
+    if (!sortButtons) return; // Ensure sortButtons is defined
     sortButtons.forEach(button => {
       const key = button.getAttribute("data-sort") || button.getAttribute("data-sort-low-stock") || button.getAttribute("data-sort-inventory");
       if (key === currentSortKey) {
@@ -422,7 +426,25 @@ document.addEventListener("DOMContentLoaded", function () {
         const ascending = button.getAttribute("data-order") === "asc";
         sortProducts(key, ascending);
         button.setAttribute("data-order", ascending ? "desc" : "asc");
-        updateSortIndicators(sortButtons, currentSortKey, currentSortOrder);
+      });
+    });
+  }
+
+  // Attach sorting event listeners for inventory
+  function attachSortingListenersInventory() {
+    const sortButtons = document.querySelectorAll("[data-sort-inventory]");
+    sortButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const key = button.getAttribute("data-sort-inventory");
+        const ascending = button.getAttribute("data-order") === "asc";
+        currentSortKeyInventory = key;
+        currentSortOrderInventory = ascending ? "asc" : "desc";
+        button.setAttribute("data-order", ascending ? "desc" : "asc");
+        currentPageInventory = 1; // Reset to the first page after sorting
+        updateInventoryTable(currentInventory);
+
+        // Pass the correct sort buttons to updateSortIndicators
+        updateSortIndicators(sortButtons, currentSortKeyInventory, currentSortOrderInventory);
       });
     });
   }
@@ -979,6 +1001,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return matchesSearch && matchesStockAction && matchesDate;
     });
 
+    // Sort inventory
+    if (currentSortKeyInventory) {
+      filteredInventory.sort((a, b) => {
+        const aValue = a[currentSortKeyInventory];
+        const bValue = b[currentSortKeyInventory];
+        if (aValue < bValue) return currentSortOrderInventory === "asc" ? -1 : 1;
+        if (aValue > bValue) return currentSortOrderInventory === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
     // Paginate inventory
     const startIndex = (currentPageInventory - 1) * itemsPerPageInventory;
     const endIndex = startIndex + itemsPerPageInventory;
@@ -1067,6 +1100,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.querySelectorAll("[data-sort-inventory]").forEach(button => {
     button.addEventListener("click", () => {
+      const sortButtons = document.querySelectorAll("[data-sort-inventory]");
       const key = button.getAttribute("data-sort-inventory");
       const ascending = button.getAttribute("data-order") === "asc";
       currentSortKeyInventory = key;
@@ -1090,6 +1124,8 @@ document.addEventListener("DOMContentLoaded", function () {
         button.setAttribute("data-order", ascending ? "desc" : "asc");
         currentPageInventory = 1; // Reset to the first page after sorting
         updateInventoryTable(currentInventory);
+
+        // Pass the correct sort buttons to updateSortIndicators
         updateSortIndicators(sortButtons, currentSortKeyInventory, currentSortOrderInventory);
       });
     });
