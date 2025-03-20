@@ -129,19 +129,11 @@ document.addEventListener("DOMContentLoaded", function () {
             ? `<button class="btn btn-danger btn-sm mt-2" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
             : ""
         }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
         ${
           order.status === "Delivered"
             ? `<button class="btn btn-success btn-sm mt-2" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Generate Receipt</button>`
             : ""
         }
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
       </div>
     `;
     return card;
