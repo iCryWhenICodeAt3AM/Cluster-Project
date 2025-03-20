@@ -1,3 +1,9 @@
 product_id,category,brand,item,product_description,price
 13,Drink,Starbucks,Caffe Latte,Espresso with steamed milk,200
 14,Drink,Starbucks,Caramel Macchiato,Espresso with vanilla syrup and caramel,220
+15,Drink,Starbucks,Mocha Frappuccino,Blended coffee with chocolate and whipped cream,250
+16,Drink,Starbucks,Cold Brew,Slow-steeped cold coffee,180
+17,Food,Pizza Hut,Pepperoni Pizza,Classic pizza with pepperoni and mozzarella,350
+18,Food,Pizza Hut,Supreme Pizza,"Pizza with various meats, veggies, and cheese",400
+19,Food,Pizza Hut,Cheese Lovers,Extra cheese and special crust,380
+20,Food,Pizza Hut,BBQ Chicken Pizza,"Grilled chicken, BBQ sauce, and onions",390
