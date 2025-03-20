@@ -232,15 +232,17 @@ def update_product():
             payload['brand'] = product_data['brand']
         if 'description' in product_data and product_data['description']:
             payload['description'] = product_data['description']
-
+        
         # Log the payload for debugging purposes
         print(f"Payload sent to external API: {payload}")
 
         # Send the product data to the external API
         response = requests.put(f"{API_BASE_URL}/api/padeliver-product", json=payload)
         if response.status_code == 200:
-            return jsonify(response.json()), 200
+            print(f"Product updated successfully: {response.json()}")
+            return jsonify({'success': True, 'message': 'Product updated successfully'}), 200
         else:
+            print(f"Failed to update product: {response.status_code} - {response.text}")
             return jsonify({'error': 'Failed to update product', 'details': response.text}), response.status_code
     except Exception as e:
         print(f"Error in update_product: {e}")

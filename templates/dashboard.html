@@ -689,15 +689,6 @@
                 }
             }
         });
-
-        // Attach event listener to dynamically open the Edit Product modal
-        document.getElementById('products-stock').addEventListener('click', function (e) {
-            const target = e.target.closest('.btn-primary'); // Ensure the correct button is targeted
-            if (target && target.dataset.product) {
-                const product = JSON.parse(target.dataset.product); // Parse the product data
-                openEditProductModal(product);
-            }
-        });
     </script>
 </body>
 </html>
