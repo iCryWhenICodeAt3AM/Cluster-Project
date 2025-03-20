@@ -157,21 +157,21 @@ def logout():
     session.clear()  # Clear the session
     return jsonify({"message": "Logged out successfully", "redirect": "/signin.html"}), 200
 
-@app.route('/api/cart/<user_id>/checkout', methods=['POST'])
-def checkout(user_id):
-    """Handle the checkout process for a user."""
+@app.route('/api/cart/<user_id>/place-order', methods=['POST'])
+def place_order(user_id):
+    """Handle the place order process for a user."""
     try:
-        # Send a POST request to the checkout endpoint
+        # Send a POST request to the place order endpoint
         response = requests.post(f"{API_BASE_URL}/api/cart/{user_id}/checkout")
         if response.status_code == 200:
-            checkout_data = response.json()
-            print(f"Checkout successful for user {user_id}: {checkout_data}")
-            return jsonify(checkout_data), 200
+            order_data = response.json()
+            print(f"Order placed successfully for user {user_id}: {order_data}")
+            return jsonify(order_data), 200
         else:
-            print(f"Checkout failed for user {user_id}: {response.status_code} - {response.text}")
-            return jsonify({'error': 'Failed to process checkout'}), response.status_code
+            print(f"Order placement failed for user {user_id}: {response.status_code} - {response.text}")
+            return jsonify({'error': 'Failed to process order'}), response.status_code
     except Exception as e:
-        print(f"Error during checkout: {e}")
+        print(f"Error during order placement: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/dashboard/padeliver-products-with-stock', methods=['GET'])

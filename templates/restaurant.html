@@ -63,7 +63,6 @@
           <!-- Cart -->
           <div class="col-lg-4">
             {% include 'components/cart.html' %}
-            <button class="btn btn-primary w-100 mt-3" id="checkout-button">Place Order</button>
           </div>
         </div>
       </section>
@@ -98,16 +97,16 @@
       })
       .catch(error => console.error('Error fetching cart:', error));
 
-    // Handle checkout button click
-    document.getElementById('checkout-button').addEventListener('click', () => {
-      fetch(`/api/cart/${userId}/checkout`, { method: 'POST' })
+    // Handle place order button click
+    document.getElementById('place-order-button').addEventListener('click', () => {
+      fetch(`/api/cart/${userId}/place-order`, { method: 'POST' })
         .then(response => response.json())
         .then(data => {
-          alert(data.message || 'Checkout successful!');
+          alert(data.message || 'Order placed successfully!');
           sessionStorage.setItem('cart', JSON.stringify([]));
           // updateCart();
         })
-        .catch(error => console.error('Error during checkout:', error));
+        .catch(error => console.error('Error during order placement:', error));
     });
 
     // Keep the window.fcWidget.init

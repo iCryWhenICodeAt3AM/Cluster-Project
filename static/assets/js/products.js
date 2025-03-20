@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function() {
           const brandImage = `${product.brand}.jpg`;
           const productCard = `
         <div class="col-md-6 mb-4">
-          <div class="card food-item h-100 d-flex flex-column" data-product-id="${product.product_id}">
+          <div class="card food-item h-100 d-flex flex-column" data-product-id="${product.product_id}" data-product-stock="${product.stock}">
         <div class="row g-0 flex-grow-1">
           <div class="col-4">
             <img src="../static/assets/${brandImage}" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
           <p class="card-text text-muted small">Stock: ${product.stock}</p>
           <div class="mt-auto d-flex justify-content-between align-items-center">
             <span class="fw-bold">Php ${product.price}</span>
-            <button class="btn btn-sm btn-primary">Place Order</button>
+            <button class="btn btn-sm btn-primary">Add</button>
           </div>
             </div>
           </div>
