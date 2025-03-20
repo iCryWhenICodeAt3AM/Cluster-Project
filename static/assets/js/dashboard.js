@@ -180,35 +180,6 @@ document.addEventListener("DOMContentLoaded", function () {
     updatePaginationControls(currentProducts.length);
   }
 
-  // Function to handle product deletion
-  function deleteProduct(productId) {
-    if (!confirm('Are you sure you want to delete this product?')) {
-        return;
-    }
-
-    fetch(`/api/delete-product/${productId}`, {
-        method: 'DELETE',
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            alert('Product deleted successfully!');
-            fetchProducts(); // Refresh the product list
-        } else {
-            alert(data.error || 'Failed to delete product.');
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting product:', error);
-        alert('An error occurred. Please check the server logs or try again.');
-    });
-}
-
   // Update pagination controls
   function updatePaginationControls(totalItems) {
     if (!paginationControls) return;
@@ -423,17 +394,16 @@ document.addEventListener("DOMContentLoaded", function () {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
     })
-    .then((response) => {
+    .then(async (response) => {
+        const data = await response.json();
         if (!response.ok) {
-            return response.json().then((data) => {
-                throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-            });
+            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
         }
-        return response.json();
+        return data;
     })
     .then((data) => {
         if (data.success) {
-            alert("Product updated successfully!");
+            alert(data.message || "Product updated successfully!");
             document.getElementById("editProductForm").reset(); // Reset the form
             fetchProducts(); // Refresh the product list
         } else {
@@ -445,6 +415,35 @@ document.addEventListener("DOMContentLoaded", function () {
         alert(`An error occurred: ${error.message}`);
     });
 });
+
+// Function to handle product deletion
+function deleteProduct(productId) {
+  if (!confirm('Are you sure you want to delete this product?')) {
+      return;
+  }
+
+  fetch(`/api/delete-product/${productId}`, {
+      method: 'DELETE',
+  })
+  .then(response => {
+      if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+  })
+  .then(data => {
+      if (data.success) {
+          alert('Product deleted successfully!');
+          fetchProducts(); // Refresh the product list
+      } else {
+          alert(data.error || 'Failed to delete product.');
+      }
+  })
+  .catch(error => {
+      console.error('Error deleting product:', error);
+      alert('An error occurred. Please check the server logs or try again.');
+  });
+}
 
 // Attach event listener to dynamically open the Edit Product modal
 document.getElementById("products-stock").addEventListener("click", function (e) {

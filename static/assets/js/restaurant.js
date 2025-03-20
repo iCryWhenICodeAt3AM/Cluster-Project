@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function() {
               <div class="card food-item h-100" data-product-id="${product.product_id}">
                 <div class="row g-0">
                   <div class="col-4">
-                    <img src="../static/assets/${product.brand.toLowerCase().replace(/ /g, '')}.jpg" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
+                    <img src="../static/assets/${product.brand}.jpg" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
                   </div>
                   <div class="col-8">
                     <div class="card-body">
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function() {
       brands.forEach(brand => {
         const brandProducts = products.filter(product => product.brand === brand);
         const categories = [...new Set(brandProducts.map(product => product.category))].slice(0, 3);
-        const brandImage = brand.toLowerCase().replace(/ /g, '') + ".jpg";
+        const brandImage = brand + ".jpg";
         const restaurantCard = `
           <div class="col-md-4 col-sm-6">
             <div class="card restaurant-card h-100 shadow-sm">
