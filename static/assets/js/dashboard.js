@@ -1,11 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
   const lowStockTable = document.getElementById("low-stock");
   const productsStockTable = document.getElementById("products-stock");
+  const paginationControlsLowStock = document.getElementById("pagination-controls-low-stock");
   const paginationControls = document.getElementById("pagination-controls");
   const categoryDropdowns = document.querySelectorAll("#productCategory, #editProductCategory");
   const itemsPerPage = 5;
+  let currentPageLowStock = 1;
   let currentPage = 1;
+  let currentLowStockProducts = [];
   let currentProducts = [];
+  let currentSortKeyLowStock = null;
+  let currentSortOrderLowStock = null;
   let currentSortKey = null;
   let currentSortOrder = null;
 
@@ -25,7 +30,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         currentProducts = products; // Update the current products list
-        updateLowStockProducts(products);
+        currentLowStockProducts = products.filter((product) => product.stock < 30); // Filter low stock products
+        updateLowStockProducts();
         updateAllProducts();
         populateCategories(products); // Dynamically update categories
       })
@@ -88,20 +94,36 @@ document.addEventListener("DOMContentLoaded", function () {
   handleNewCategoryInput("addProductModal", "productCategory", "newCategoryInput", "addNewCategoryButton");
   handleNewCategoryInput("editProductModal", "editProductCategory", "editNewCategoryInput", "editAddNewCategoryButton");
 
-  // Update the "Low Stock Products" section
-  function updateLowStockProducts(products) {
+  // Update the "Low Stock Products" section with sorting and pagination
+  function updateLowStockProducts() {
     if (!lowStockTable) return;
 
     // Clear the current table content
     lowStockTable.innerHTML = "";
 
-    // Filter products with stock below 30
-    const lowStockProducts = products.filter((product) => product.stock < 30);
+    // Sort products if a sort key is set
+    if (currentSortKeyLowStock) {
+      currentLowStockProducts.sort((a, b) => {
+        const aValue = currentSortKeyLowStock === "price" ? parseFloat(a[currentSortKeyLowStock]) : a[currentSortKeyLowStock];
+        const bValue = currentSortKeyLowStock === "price" ? parseFloat(b[currentSortKeyLowStock]) : b[currentSortKeyLowStock];
+        if (aValue < bValue) return currentSortOrderLowStock === "asc" ? -1 : 1;
+        if (aValue > bValue) return currentSortOrderLowStock === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
 
-    // Populate the table with low stock products
-    lowStockProducts.forEach((product) => {
+    // Calculate pagination
+    const startIndex = (currentPageLowStock - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedLowStockProducts = currentLowStockProducts.slice(startIndex, endIndex);
+
+    // Populate the table with paginated low stock products
+    paginatedLowStockProducts.forEach((product) => {
       const row = document.createElement("tr");
       const stockBadgeClass = product.stock < 10 ? "bg-danger" : "bg-warning";
+      const status = product.stock === 0 ? "Inactive" : "Active";
+      const statusClass = product.stock === 0 ? "status-inactive" : "status-active";
+
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
@@ -117,13 +139,102 @@ document.addEventListener("DOMContentLoaded", function () {
           <span class="badge ${stockBadgeClass}">${product.stock} left</span>
         </td>
         <td>
-          <span class="status-indicator status-active"></span> Active
+          <span class="status-indicator ${statusClass}"></span> ${status}
         </td>
         <td>
-          <button class="btn btn-sm btn-primary">Update Stock</button>
+          <button class="btn btn-sm btn-primary" data-product-id="${product.product_id}">Update Stock</button>
         </td>
       `;
       lowStockTable.appendChild(row);
+    });
+
+    // Update pagination controls
+    updatePaginationControlsLowStock(currentLowStockProducts.length);
+  }
+
+  // Update pagination controls for low stock products
+  function updatePaginationControlsLowStock(totalItems) {
+    if (!paginationControlsLowStock) return;
+
+    paginationControlsLowStock.innerHTML = "";
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Showing text
+    const showingText = document.createElement("div");
+    showingText.className = "me-auto";
+    showingText.textContent = `Showing ${Math.min(currentPageLowStock * itemsPerPage, totalItems)} of ${totalItems} items.`;
+    paginationControlsLowStock.appendChild(showingText);
+
+    // Pagination buttons container
+    const paginationButtons = document.createElement("div");
+    paginationButtons.className = "d-flex align-items-center";
+
+    // Previous button
+    if (currentPageLowStock > 1) {
+      const prevButton = document.createElement("button");
+      prevButton.className = "btn btn-sm btn-outline-primary me-2";
+      prevButton.textContent = "Previous";
+      prevButton.addEventListener("click", () => {
+        currentPageLowStock--;
+        updateLowStockProducts();
+      });
+      paginationButtons.appendChild(prevButton);
+    }
+
+    // Go to page input
+    const goToPageInput = document.createElement("input");
+    goToPageInput.type = "number";
+    goToPageInput.className = "form-control form-control-sm me-2";
+    goToPageInput.style.width = "60px";
+    goToPageInput.value = currentPageLowStock;
+    goToPageInput.min = 1;
+    goToPageInput.max = totalPages;
+    goToPageInput.addEventListener("change", () => {
+      const page = parseInt(goToPageInput.value, 10);
+      if (page >= 1 && page <= totalPages) {
+        currentPageLowStock = page;
+        updateLowStockProducts();
+      } else {
+        goToPageInput.value = currentPageLowStock;
+      }
+    });
+    paginationButtons.appendChild(goToPageInput);
+
+    // Total pages text
+    const totalPagesText = document.createElement("span");
+    totalPagesText.className = "me-2";
+    totalPagesText.textContent = `of ${totalPages}`;
+    paginationButtons.appendChild(totalPagesText);
+
+    // Next button
+    if (currentPageLowStock < totalPages) {
+      const nextButton = document.createElement("button");
+      nextButton.className = "btn btn-sm btn-outline-primary";
+      nextButton.textContent = "Next";
+      nextButton.addEventListener("click", () => {
+        currentPageLowStock++;
+        updateLowStockProducts();
+      });
+      paginationButtons.appendChild(nextButton);
+    }
+
+    paginationControlsLowStock.appendChild(paginationButtons);
+  }
+
+  // Attach sorting event listeners for low stock products
+  function attachSortingListenersLowStock() {
+    const sortButtons = document.querySelectorAll("[data-sort-low-stock]");
+    sortButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.getAttribute("data-sort-low-stock");
+        const ascending = button.getAttribute("data-order") === "asc";
+        currentSortKeyLowStock = key;
+        currentSortOrderLowStock = ascending ? "asc" : "desc";
+        button.setAttribute("data-order", ascending ? "desc" : "asc");
+        currentPageLowStock = 1; // Reset to the first page after sorting
+        updateLowStockProducts();
+      });
     });
   }
 
@@ -144,6 +255,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const row = document.createElement("tr");
       row.setAttribute("data-product-id", product.product_id); // Store the product_id in a data attribute
       const stockBadgeClass = product.stock < 10 ? "bg-danger" : product.stock < 30 ? "bg-warning" : "bg-success";
+      const status = product.stock === 0 ? "Inactive" : "Active";
+      const statusClass = product.stock === 0 ? "status-inactive" : "status-active";
+
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
@@ -160,7 +274,7 @@ document.addEventListener("DOMContentLoaded", function () {
           <span class="badge ${stockBadgeClass}">${product.stock} left</span>
         </td>
         <td>
-          <span class="status-indicator status-active"></span> Active
+          <span class="status-indicator ${statusClass}"></span> ${status}
         </td>
         <td>
           <div class="btn-group">
@@ -323,8 +437,136 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Function to handle adding inventory
+  function addInventory(productId) {
+    const quantity = parseInt(prompt("Enter quantity to add:", "0"));
+    if (isNaN(quantity) || quantity <= 0) {
+      alert("Invalid quantity. Please enter a positive number.");
+      return;
+    }
+
+    const remark = prompt("Enter remark for this inventory update:", "Restock!");
+    if (!remark) {
+      alert("Remark is required.");
+      return;
+    }
+
+    const payload = {
+      product_id: productId,
+      quantity: quantity,
+      remark: remark,
+    };
+
+    fetch("/api/add-inventory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert(data.message || "Inventory updated successfully!");
+        fetchProducts(); // Refresh the product list
+      })
+      .catch((error) => {
+        console.error("Error adding inventory:", error);
+        alert(`An error occurred: ${error.message}`);
+      });
+  }
+
+  // Attach event listener to dynamically handle "Update Stock" button clicks
+  document.getElementById("low-stock").addEventListener("click", function (e) {
+    const target = e.target.closest(".btn-primary"); // Ensure the correct button is targeted
+    if (target && target.dataset.productId) {
+      openUpdateStockModal(target.dataset.productId);
+    }
+  });
+
+  // Function to open the Update Stock modal
+  function openUpdateStockModal(productId) {
+    const updateStockProductId = document.getElementById("updateStockProductId");
+    const updateStockAction = document.getElementById("updateStockAction");
+    const updateStockQuantity = document.getElementById("updateStockQuantity");
+    const updateStockRemark = document.getElementById("updateStockRemark");
+
+    // Reset the form fields
+    updateStockProductId.value = productId;
+    updateStockAction.value = "add";
+    updateStockQuantity.value = "";
+    updateStockRemark.value = "";
+
+    // Show the modal
+    const updateStockModalElement = document.getElementById("updateStockModal");
+    const updateStockModal = bootstrap.Modal.getOrCreateInstance(updateStockModalElement);
+    updateStockModal.show();
+  }
+
+  // Handle Update Stock form submission
+  document.getElementById("updateStockForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const productId = document.getElementById("updateStockProductId").value;
+    const action = document.getElementById("updateStockAction").value;
+    const quantity = parseInt(document.getElementById("updateStockQuantity").value, 10);
+    const userRemark = document.getElementById("updateStockRemark").value.trim();
+
+    if (isNaN(quantity) || quantity <= 0) {
+      alert("Invalid quantity. Please enter a positive number.");
+      return;
+    }
+
+    const remark = action === "add" ? `Stock-in: ${userRemark}` : `Stock-out: ${userRemark}`;
+
+    const payload = {
+      product_id: productId,
+      quantity: action === "add" ? quantity : -quantity,
+      remark: remark,
+    };
+
+    fetch("/api/add-inventory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert(data.message || "Stock updated successfully!");
+        fetchProducts(); // Refresh the product list
+        const updateStockModalElement = document.getElementById("updateStockModal");
+        const updateStockModal = bootstrap.Modal.getInstance(updateStockModalElement);
+        updateStockModal.hide();
+      })
+      .catch((error) => {
+        fetchProducts(); // Refresh the product list
+        console.error("Error updating stock:", error);
+        alert(`An error occurred: ${error.message}`);
+      });
+  });
+
+  // Attach event listener to dynamically handle "Update Stock" button clicks
+  document.getElementById("low-stock").addEventListener("click", function (e) {
+    const target = e.target.closest(".btn-primary"); // Ensure the correct button is targeted
+    if (target && target.dataset.productId) {
+      openUpdateStockModal(target.dataset.productId);
+    }
+  });
+
   // Initial load
   fetchProducts();
+  attachSortingListenersLowStock();
   attachSortingListeners();
 
   // Add Product Form Submission
@@ -438,6 +680,7 @@ document.addEventListener("DOMContentLoaded", function () {
             fetchProducts(); // Refresh the product list
         } else {
             alert(data.error || "Failed to update product.");
+            fetchProducts(); // Refresh the product list
         }
     })
     .catch((error) => {
