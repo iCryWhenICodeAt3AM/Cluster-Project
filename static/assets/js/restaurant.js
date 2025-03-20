@@ -49,9 +49,9 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="card-body d-flex flex-column flex-grow-1">
               <h5 class="card-title">${product.item}</h5>
               <p class="card-text text-muted small flex-grow-1">${product.product_description}</p>
-              <p class="card-text small">Stock: ${product.stock}</p>
+              <p class="card-text small">Stock: ${product.stock.toLocaleString()}</p>
               <div class="d-flex justify-content-between align-items-center mt-auto">
-                <span class="fw-bold">Php ${product.price}</span>
+                <span class="fw-bold">Php ${product.price.toLocaleString()}</span>
                 <button class="btn btn-sm btn-primary">Add</button>
               </div>
             </div>

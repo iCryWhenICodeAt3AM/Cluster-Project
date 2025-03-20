@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", function () {
         currentLowStockProducts = products.filter((product) => product.stock < 30); // Filter low stock products
         updateLowStockProducts();
         updateAllProducts();
+        updateDashboardStats(products); // Update dashboard stats
         populateCategories(products); // Dynamically update categories
       })
       .catch((error) => console.error("Error fetching products:", error));
@@ -269,9 +270,9 @@ document.addEventListener("DOMContentLoaded", function () {
           </div>
         </td>
         <td>${product.category}</td>
-        <td>Php ${product.price}</td>
+        <td>Php ${product.price.toLocaleString()}</td>
         <td>
-          <span class="badge ${stockBadgeClass}">${product.stock} left</span>
+          <span class="badge ${stockBadgeClass}">${product.stock.toLocaleString()} left</span>
         </td>
         <td>
           <span class="status-indicator ${statusClass}"></span> ${status}
@@ -534,6 +535,19 @@ document.addEventListener("DOMContentLoaded", function () {
       openUpdateStockModal(target.dataset.productId);
     }
   });
+
+  // Update dashboard stats
+  function updateDashboardStats(products) {
+    const totalProducts = products.length;
+    const lowStockItems = products.filter(product => product.stock < 30).length;
+    const activeProducts = products.filter(product => product.stock > 0).length;
+    const outOfStockItems = products.filter(product => product.stock === 0).length;
+
+    document.querySelector("#dashboard .card:nth-child(1) .card-title").textContent = totalProducts;
+    document.querySelector("#dashboard .card:nth-child(2) .card-title").textContent = lowStockItems;
+    document.querySelector("#dashboard .card:nth-child(3) .card-title").textContent = activeProducts;
+    document.querySelector("#dashboard .card:nth-child(4) .card-title").textContent = outOfStockItems;
+  }
 
   // Initial load
   fetchProducts();

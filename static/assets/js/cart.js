@@ -12,28 +12,26 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if (Array.isArray(cart)) {
       cart.forEach(item => {
-        const itemTotal = item.quantity * item.price;
-        const cartItem = `
-          <div class="cart-item py-3">
-            <div class="d-flex justify-content-between">
-              <div>
-                <h6 class="mb-1">${item.quantity}x ${item.item}</h6>
-                <p class="text-muted small mb-0">${item.description}</p>
-              </div>
-              <div class="text-end">
-                <span class="fw-bold">Php ${itemTotal}</span>
-                <div class="btn-group btn-group-sm mt-1">
-                  <button class="btn btn-outline-secondary" onclick="updateQuantity('${item.product_id}', -1)">-</button>
-                  <button class="btn btn-outline-secondary" onclick="updateQuantity('${item.product_id}', 1)">+</button>
-                </div>
-              </div>
-            </div>
+      const itemTotal = item.quantity * item.price;
+      const formattedItemTotal = itemTotal.toLocaleString('en-US'); // Add commas every 3 digits
+      const cartItem = `
+        <div class="cart-item py-3">
+        <div class="d-flex justify-content-between">
+          <div>
+          <h6 class="mb-1">${item.quantity}x ${item.item}</h6>
+          <p class="text-muted small mb-0">${item.description}</p>
           </div>
-        `;
-        cartContainer.insertAdjacentHTML('beforeend', cartItem);
-        total += itemTotal;
+          <div class="text-end">
+          <span class="fw-bold">Php ${formattedItemTotal}</span>
+          </div>
+        </div>
+        </div>
+      `;
+      cartContainer.insertAdjacentHTML('beforeend', cartItem);
+      total += itemTotal;
       });
     }
+    total = total.toLocaleString('en-US'); // Format total with commas
 
     document.querySelector('.card-footer .fw-bold:last-child').textContent = `Php ${total}`;
     sessionStorage.setItem('cart', JSON.stringify(cart));
@@ -70,17 +68,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  function updateQuantity(productId, change) {
-    const product = cart.find(item => item.product_id === productId);
-    if (product) {
-      product.quantity = parseInt(product.quantity) + change;
-      if (product.quantity <= 0) {
-        cart = cart.filter(item => item.product_id !== productId);
-      }
-      updateCart();
-    }
-  }
-
   function fetchCart() {
     fetch(`/api/cart/${userId}`)
       .then(response => {
@@ -112,8 +99,6 @@ document.addEventListener("DOMContentLoaded", function() {
       addToCart(product);
     }
   });
-
-  window.updateQuantity = updateQuantity; // Make updateQuantity function globally accessible
 
   fetchCart(); // Fetch the cart when the page loads
 });
