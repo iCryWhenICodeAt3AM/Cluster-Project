@@ -116,4 +116,31 @@ document.addEventListener("DOMContentLoaded", function() {
   window.updateQuantity = updateQuantity; // Make updateQuantity function globally accessible
 
   fetchCart(); // Fetch the cart when the page loads
+
+  document.getElementById('checkout-button').addEventListener('click', () => {
+    const userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+      alert('User not signed in. Redirecting to sign-in page.');
+      window.location.href = '/signin.html';
+      return;
+    }
+  
+    fetch(`/api/cart/${userId}/checkout`, { method: 'POST' })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        alert(data.message || 'Order placed successfully!');
+        sessionStorage.setItem('cart', JSON.stringify([])); // Clear cart in session storage
+        document.getElementById('cart').innerHTML = ''; // Clear cart display
+        document.getElementById('cart-total').textContent = 'Php 0.00'; // Reset total
+      })
+      .catch(error => {
+        console.error('Error during order placement:', error);
+        alert('An error occurred while placing the order. Please try again.');
+      });
+  });
 });

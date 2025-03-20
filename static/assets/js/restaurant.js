@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
               <p class="card-text small">Stock: ${product.stock}</p>
               <div class="d-flex justify-content-between align-items-center mt-auto">
                 <span class="fw-bold">Php ${product.price}</span>
-                <button class="btn btn-sm btn-primary">Add</button>
+                <button class="btn btn-sm btn-primary">Place Order</button>
               </div>
             </div>
           </div>
