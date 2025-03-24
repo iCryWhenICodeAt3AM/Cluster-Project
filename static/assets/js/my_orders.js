@@ -139,7 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         ${
           order.status === "Delivered"
-            ? `<button class="btn btn-success btn-sm flex-fill" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Generate Receipt</button>`
+            ? `<button class="btn btn-danger btn-sm flex-fill" onclick='returnOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Return Order</button>
+               <button class="btn btn-success btn-sm flex-fill" style="margin-right: 0.5rem;" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Order Received</button>`
             : ""
         }
       </div>
@@ -365,6 +366,43 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Error generating receipt:", error);
             alert("An error occurred while generating the receipt.");
         });
+  };
+
+  window.returnOrder = function (orderId, encodedOrderItems) {
+    // Decode the order items
+    const orderItems = JSON.parse(decodeURIComponent(encodedOrderItems));
+    console.log("Returning order:", orderId, orderItems);
+    
+    // Confirm with the user before proceeding
+    if (!confirm("Are you sure you want to return this order? This action cannot be undone.")) return;
+
+    // Update the order status to "Cancelled" (using the same endpoint as cancel)
+    updateOrderStatus(orderId, "Cancelled")
+      .then(() => {
+        // Add inventory back for each item in the order
+        const restockPromises = orderItems.map((item) => {
+          const payload = {
+            product_id: item.product_id,
+            quantity: item.quantity
+          };
+          
+          return fetch("/api/inventory/restock", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+        });
+
+        return Promise.all(restockPromises);
+      })
+      .then(() => {
+        alert("Order has been returned successfully.");
+        fetchOrders(); // Refresh the orders display
+      })
+      .catch((error) => {
+        console.error("Error returning order:", error);
+        alert("Failed to return order. Please try again.");
+      });
   };
 
   function displayOrdersByTab(orders) {
