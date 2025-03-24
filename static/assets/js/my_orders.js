@@ -7,11 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const sections = {
-    Preparing: document.getElementById("preparing-orders"),
-    Shipped: document.getElementById("transport-orders"),
-    Delivered: document.getElementById("delivered-orders"),
-    Received: document.getElementById("received-orders"),
-    Cancelled: document.getElementById("cancelled-orders"),
+    All: document.getElementById("all-orders-section"),
+    Current: document.getElementById("current-orders-section"),
+    Past: document.getElementById("past-orders-section"),
+    Cancelled: document.getElementById("cancelled-orders-section"),
   };
 
   const tabCounts = {
@@ -38,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((response) => response.json())
       .then((data) => {
         if (data.orders) {
-          paginateOrders(data.orders);
+          displayOrdersByTab(data.orders);
         } else {
           console.error("Failed to fetch orders:", data.error);
         }
@@ -104,62 +103,143 @@ document.addEventListener("DOMContentLoaded", function () {
   function createOrderCard(order) {
     const card = document.createElement("div");
     card.className = "card mb-3";
-
+  
     const firstItem = order.items[0];
     const additionalItemsCount = order.items.length - 1;
-
+  
+    // Calculate time elapsed since the order date
+    const orderDate = new Date(order.order_datetime);
+    const now = new Date();
+    const timeElapsed = calculateTimeElapsed(orderDate, now);
+  
     card.innerHTML = `
-      <div class="card-header">
-        <h5>Order ID: ${order.order_id}</h5>
-        <small>${order.order_datetime}</small>
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h4 style="font-size: 1.25rem;">Order ID: ${order.order_id}</h4>
+          <p><small style="font-size: 1rem;">${timeElapsed}</small></p>
+        </div>
+        <p><small class="badge bg-${getStatusBadgeClass(order.status)}" style="font-size: 1rem;">${order.status}</small></p>
       </div>
       <div class="card-body">
-        <p><strong>Status:</strong> ${order.status}</p>
-        <p><strong>Items:</strong> ${firstItem.quantity}x ${firstItem.item} - Php ${firstItem.price}</p>
+        <p style="font-size: 1.1rem;">${firstItem.quantity}x ${firstItem.item} - Php ${firstItem.price}</p>
         ${
           additionalItemsCount > 0
-            ? `<p class="text-muted">+ ${additionalItemsCount} more item(s)</p>`
+            ? `<p class="text-muted" style="font-size: 1rem;">+ ${additionalItemsCount} more item(s)</p>`
             : ""
         }
-        <button class="btn btn-primary btn-sm" onclick="showOrderDetails('${encodeURIComponent(
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <button class="btn btn-primary btn-sm flex-fill" style="margin-right: 0.5rem;" onclick="showOrderDetails('${encodeURIComponent(
           JSON.stringify(order)
         )}')">Show Details</button>
         ${
           order.status === "Preparing"
-            ? `<button class="btn btn-danger btn-sm mt-2" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
+            ? `<button class="btn btn-danger btn-sm flex-fill" style="margin-right: 0.5rem;" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
             : ""
         }
         ${
           order.status === "Delivered"
-            ? `<button class="btn btn-success btn-sm mt-2" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Generate Receipt</button>`
+            ? `<button class="btn btn-success btn-sm flex-fill" onclick='generateReceipt("${order.order_id}", "${order.customer_name}")'>Generate Receipt</button>`
             : ""
         }
       </div>
     `;
+  
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case "Preparing":
+          return "warning";
+        case "Shipped":
+          return "info";
+        case "Delivered":
+          return "success";
+        case "Cancelled":
+          return "danger";
+        case "Received":
+          return "secondary";
+        default:
+          return "light";
+      }
+    }
     return card;
+  }
+  
+  function calculateTimeElapsed(orderDate, now) {
+    const diffInMs = now - orderDate;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  
+    if (diffInDays === 0) {
+      return "Today";
+    } else if (diffInDays < 7) {
+      return `${diffInDays} day(s) ago`;
+    } else if (diffInDays < 30) {
+      const weeks = Math.floor(diffInDays / 7);
+      return `${weeks} week(s) ago`;
+    } else if (diffInDays < 365) {
+      const months = Math.floor(diffInDays / 30);
+      return `${months} month(s) ago`;
+    } else {
+      const years = Math.floor(diffInDays / 365);
+      return `${years} year(s) ago`;
+    }
   }
 
   window.showOrderDetails = function (encodedOrder) {
     const orderData = JSON.parse(decodeURIComponent(encodedOrder));
     const modal = document.getElementById("order-details-modal");
-
+  
     if (!modal) {
       console.error("Modal element with ID 'order-details-modal' not found.");
       return;
     }
-
-    modal.querySelector(".modal-title").textContent = `Order ID: ${orderData.order_id}`;
-    modal.querySelector(".modal-body").innerHTML = `
-      <p><strong>Order Date:</strong> ${orderData.order_datetime}</p>
-      ${orderData.items
-        .map(
-          (item) => `
-        <p>${item.quantity}x ${item.item} - Php ${item.price}</p>
+  
+    // Correct the selector for the stepper container
+    const stepperContainer = modal.querySelector(".stepper-wrapper");
+    if (!stepperContainer) {
+      console.error("Stepper container with class 'stepper-wrapper' not found.");
+      return;
+    }
+  
+    // Generate horizontal stepper steps based on order status
+    const statusSteps = ["Preparing", "Shipped", "Delivered", "Received"];
+    const currentStepIndex = Math.max(statusSteps.indexOf(orderData.status), 0);
+    const stepper = statusSteps
+      .map(
+        (step, index) => `
+        <div class="stepper-item ${index <= currentStepIndex ? "completed" : ""}">
+          <div class="step-counter">${index + 1}</div>
+          <div class="step-name">${step}</div>
+        </div>
       `
-        )
-        .join("")}
-      <p><strong>Status:</strong> ${orderData.status}</p>
+      )
+      .join("");
+  
+    // Generate item list
+    const itemList = orderData.items
+      .map(
+        (item) => `
+        <div class="d-flex justify-content-between align-items-center">
+          <span>${item.quantity}x ${item.item}</span>
+          <span>Php ${item.price}</span>
+        </div>
+      `
+      )
+      .join("");
+  
+    // Calculate totals
+    const subtotal = orderData.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const total = subtotal;
+  
+    // Populate modal content
+    stepperContainer.innerHTML = stepper;
+    modal.querySelector(".order-items").innerHTML = itemList;
+    modal.querySelector(".order-totals").innerHTML = `
+      <div class="d-flex justify-content-between fw-bold">
+        <span>Total</span>
+        <span>Php ${total.toFixed(2)}</span>
+      </div>
     `;
+  
     const modalInstance = new bootstrap.Modal(modal);
     modalInstance.show();
   };
@@ -286,6 +366,29 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("An error occurred while generating the receipt.");
         });
   };
+
+  function displayOrdersByTab(orders) {
+    // Clear all sections
+    Object.values(sections).forEach((section) => (section.innerHTML = ""));
+
+    orders.forEach((order) => {
+      const card = createOrderCard(order);
+
+      // Add to "All" tab
+      sections.All.appendChild(card);
+
+      // Add to specific tabs based on status
+      if (["Preparing", "Shipped", "Delivered"].includes(order.status)) {
+        sections.Current.appendChild(card.cloneNode(true));
+      }
+      if (order.status === "Received") {
+        sections.Past.appendChild(card.cloneNode(true));
+      }
+      if (order.status === "Cancelled") {
+        sections.Cancelled.appendChild(card.cloneNode(true));
+      }
+    });
+  }
 
   fetchOrders();
 });

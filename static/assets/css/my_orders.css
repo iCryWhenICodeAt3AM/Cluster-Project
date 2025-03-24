@@ -1,0 +1,367 @@
+.nav-tabs .nav-link {
+  font-weight: bold;
+  padding: 0.5rem 1rem; /* Reduce padding */
+  font-size: 0.9rem; /* Smaller font size */
+  margin-right: 0.25rem; /* Reduce spacing between tabs */
+}
+
+.tab-content {
+  border: 1px solid #ddd;
+  border-top: none;
+  padding: 0.75rem; /* Reduce padding */
+  background-color: #fff;
+  margin-top: 0.5rem; /* Reduce margin-top */
+}
+
+.card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 0.5rem; /* Reduce margin */
+  padding: 0.5rem; /* Add padding for compactness */
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  padding: 0.5rem; /* Reduce padding */
+  font-size: 0.9rem; /* Smaller font size */
+}
+
+.card-body {
+  padding: 0.5rem; /* Reduce padding */
+  font-size: 0.85rem; /* Smaller font size */
+}
+
+.card-footer {
+  background-color: #f8f9fa;
+  padding: 0.5rem; /* Reduce padding */
+  font-size: 0.85rem; /* Smaller font size */
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem; /* Add spacing between buttons */
+}
+
+.card-footer .btn {
+  font-size: 0.8rem; /* Smaller font size */
+  padding: 0.25rem 0.5rem; /* Reduce padding */
+  flex: 1; /* Make buttons fill available space */
+}
+
+.status-badge {
+  padding: 0.2rem 0.4rem; /* Reduce padding */
+  font-size: 0.75rem; /* Smaller font size */
+}
+
+.vh-100 {
+  height: 100vh; /* Full viewport height */
+}
+
+.container {
+  max-width: 100%; /* Ensure it uses full width */
+  padding: 0.5rem; /* Reduce padding */
+  margin: auto; /* Center horizontally */
+}
+
+.progress-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative;
+  width: 100%; /* Ensure the progress bar spans the full width */
+}
+
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+  max-width: 25%; /* Ensure each step occupies equal width */
+}
+
+.step .circle {
+  width: 40px; /* Adjust circle size for better visibility */
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ddd;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.step.completed .circle {
+  background-color: #28a745;
+}
+
+.step .label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #ddd;
+  z-index: 0;
+  transform: translateY(-50%);
+}
+
+.step.completed::before {
+  background-color: #28a745;
+}
+
+.step:first-child::before {
+  display: none; /* Remove line before the first step */
+}
+
+.step:last-child::before {
+  right: 50%; /* End line at the middle of the last step */
+}
+
+.step:not(.completed) .circle {
+  background-color: #ddd; /* Ensure non-completed steps remain gray */
+}
+
+.step:not(.completed)::before {
+  background-color: #ddd; /* Ensure non-completed lines remain gray */
+}
+
+.order-items {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  padding: 1rem 0;
+}
+
+.order-totals {
+  font-size: 0.9rem;
+}
+
+.order-totals .fw-bold {
+  font-size: 1rem;
+}
+
+.modal-footer {
+  display: none; /* Remove the "Close" button */
+}
+
+.bs-stepper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative;
+  width: 100%; /* Ensure the step bar spans the full width */
+}
+
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.step .step-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: none;
+  background: none;
+  cursor: default;
+}
+
+.step .bs-stepper-circle {
+  width: 40px; /* Adjust circle size for better visibility */
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ddd;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.step.active .bs-stepper-circle {
+  background-color: #28a745; /* Green for active steps */
+}
+
+.step .bs-stepper-label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #ddd;
+  z-index: 0;
+  transform: translateY(-50%);
+}
+
+.step.active::before {
+  background-color: #28a745; /* Green for completed lines */
+}
+
+.step:first-child::before {
+  display: none; /* Remove line before the first step */
+}
+
+.step:last-child::before {
+  right: 50%; /* End line at the middle of the last step */
+}
+
+.step:not(.active) .bs-stepper-circle {
+  background-color: #ddd; /* Ensure non-active steps remain gray */
+}
+
+.step:not(.active)::before {
+  background-color: #ddd; /* Ensure non-active lines remain gray */
+}
+
+.step .bs-stepper-label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap; /* Prevent label text from wrapping */
+}
+
+.horizontal-stepper {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.stepper {
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 100%;
+  height: 4px;
+  background-color: #ddd;
+  z-index: 0;
+  transform: translateY(-50%);
+}
+
+.step.active:not(:last-child)::after {
+  background-color: #28a745;
+}
+
+.step-content {
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ddd;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 0 auto;
+}
+
+.step.active .step-number {
+  background-color: #28a745;
+}
+
+.step-label {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.stepper-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.stepper-item {
+  position: relative;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Fix line alignment with node centers */
+.stepper-item::before {
+  content: "";
+  position: absolute;
+  top: 20px; /* Position at exactly the middle of the 40px circle */
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: #ddd;
+  z-index: 0;
+  /* Remove transform which can cause alignment issues */
+}
+
+.stepper-item.completed::before {
+  background-color: #28a745;
+}
+
+.stepper-item:first-child::before {
+  left: 50%;
+}
+
+.stepper-item:last-child::before {
+  right: 50%;
+}
+
+.step-counter {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ddd;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 0 auto;
+  z-index: 1;
+  position: relative;
+}
+
+.stepper-item.completed .step-counter {
+  background-color: #28a745;
+}
+
+.step-name {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}

@@ -136,10 +136,10 @@ document.addEventListener("DOMContentLoaded", function() {
     if (operation === 'remove') {
       cart = cart.filter(item => item.product_id !== productId);
   
-      fetch('/add_to_cart', {
-        method: 'POST',
+      fetch(`/api/cart/${userId}/delete`, {
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId, product_id: productId, product: { quantity: 0 } })
+        body: JSON.stringify({ product_id: productId })
       })
         .then(response => {
           if (!response.ok) {
@@ -160,10 +160,10 @@ document.addEventListener("DOMContentLoaded", function() {
       if (product) {
         product.quantity = newQuantity;
   
-        fetch('/add_to_cart', {
-          method: 'POST',
+        fetch(`/api/cart/${userId}/edit`, {
+          method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ user_id: userId, product_id: productId, product })
+          body: JSON.stringify({ product_id: productId, quantity: newQuantity })
         })
           .then(response => {
             if (!response.ok) {

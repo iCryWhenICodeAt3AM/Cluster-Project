@@ -9,75 +9,61 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../static/assets/css/styles.css">
+  <link rel="stylesheet" href="../static/assets/css/my_orders.css">
 </head>
 <body>
   {% include 'components/header.html' %}
 
-  <div class="container mt-5">
-    <h1 class="text-center mb-4">My Orders</h1>
-    <ul class="nav nav-tabs" id="my-orders-tabs" role="tablist">
-      <li class="nav-item">
-        <a class="nav-link active" id="preparing-tab" data-bs-toggle="tab" href="#preparing" role="tab" aria-controls="preparing" aria-selected="true">
-            Preparing <span class="badge bg-secondary" id="preparing-count">0</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="shipped-tab" data-bs-toggle="tab" href="#shipped" role="tab" aria-controls="shipped" aria-selected="false">
-            Shipped <span class="badge bg-secondary" id="shipped-count">0</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="delivered-tab" data-bs-toggle="tab" href="#delivered" role="tab" aria-controls="delivered" aria-selected="false">
-            Delivered <span class="badge bg-secondary" id="delivered-count">0</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="received-tab" data-bs-toggle="tab" href="#received" role="tab" aria-controls="received" aria-selected="false">
-            Received <span class="badge bg-secondary" id="received-count">0</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="cancelled-tab" data-bs-toggle="tab" href="#cancelled" role="tab" aria-controls="cancelled" aria-selected="false">
-            Cancelled <span class="badge bg-secondary" id="cancelled-count">0</span>
-        </a>
-      </li>
-    </ul>
-    <div class="tab-content mt-4">
-      <div class="tab-pane fade show active" id="preparing" role="tabpanel" aria-labelledby="preparing-tab">
-        <div id="preparing-orders" class="order-section border p-3 rounded"></div>
-        <div id="preparing-pagination" class="pagination-controls mt-3"></div>
-      </div>
-      <div class="tab-pane fade" id="shipped" role="tabpanel" aria-labelledby="shipped-tab">
-        <div id="transport-orders" class="order-section border p-3 rounded"></div>
-        <div id="transport-pagination" class="pagination-controls mt-3"></div>
-      </div>
-      <div class="tab-pane fade" id="delivered" role="tabpanel" aria-labelledby="delivered-tab">
-        <div id="delivered-orders" class="order-section border p-3 rounded"></div>
-        <div id="delivered-pagination" class="pagination-controls mt-3"></div>
-      </div>
-      <div class="tab-pane fade" id="received" role="tabpanel" aria-labelledby="received-tab">
-        <div id="received-orders" class="order-section border p-3 rounded"></div>
-        <div id="received-pagination" class="pagination-controls mt-3"></div>
-      </div>
-      <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
-        <div id="cancelled-orders" class="order-section border p-3 rounded"></div>
-        <div id="cancelled-pagination" class="pagination-controls mt-3"></div>
+  <div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="container w-50 mt-3 px-5">
+      <ul class="nav nav-tabs" id="order-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-orders" type="button" role="tab" aria-controls="all-orders" aria-selected="true">All</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="current-tab" data-bs-toggle="tab" data-bs-target="#current-orders" type="button" role="tab" aria-controls="current-orders" aria-selected="false">Current</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-orders" type="button" role="tab" aria-controls="past-orders" aria-selected="false">Past</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled-orders" type="button" role="tab" aria-controls="cancelled-orders" aria-selected="false">Cancelled</button>
+        </li>
+      </ul>
+      <div class="tab-content mt-2"> <!-- Reduced margin-top -->
+        <div class="tab-pane fade show active" id="all-orders" role="tabpanel" aria-labelledby="all-tab">
+          <div id="all-orders-section"></div>
+        </div>
+        <div class="tab-pane fade" id="current-orders" role="tabpanel" aria-labelledby="current-tab">
+          <div id="current-orders-section"></div>
+        </div>
+        <div class="tab-pane fade" id="past-orders" role="tabpanel" aria-labelledby="past-tab">
+          <div id="past-orders-section"></div>
+        </div>
+        <div class="tab-pane fade" id="cancelled-orders" role="tabpanel" aria-labelledby="cancelled-tab">
+          <div id="cancelled-orders-section"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="modal fade" id="order-details-modal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 50%;">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <!-- Order details will be dynamically inserted here -->
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <div class="stepper-wrapper">
+            <!-- Steps will be dynamically inserted here -->
+          </div>
+          <div class="order-items mt-3">
+            <!-- Order items will be dynamically inserted here -->
+          </div>
+          <div class="order-totals mt-3">
+            <!-- Order totals will be dynamically inserted here -->
+          </div>
         </div>
       </div>
     </div>

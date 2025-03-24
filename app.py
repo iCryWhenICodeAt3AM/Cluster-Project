@@ -467,5 +467,44 @@ def generate_receipt():
     except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
+@app.route('/api/cart/<user_id>/edit', methods=['PUT'])
+def edit_cart(user_id):
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+        quantity = data.get('quantity')
+
+        if not product_id or quantity is None:
+            return jsonify({'error': 'Invalid request data'}), 400
+
+        # Forward the payload to the external API
+        response = requests.put(f"{API_BASE_URL}/api/cart/{user_id}/edit", json=data)
+
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to update product in cart'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/cart/<user_id>/delete', methods=['DELETE'])
+def delete_from_cart(user_id):
+    try:
+        data = request.get_json()
+        product_id = data.get('product_id')
+
+        if not product_id:
+            return jsonify({'error': 'Invalid request data'}), 400
+
+        # Forward the payload to the external API
+        response = requests.delete(f"{API_BASE_URL}/api/cart/{user_id}/delete", json=data)
+
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({'error': 'Failed to remove product from cart'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
