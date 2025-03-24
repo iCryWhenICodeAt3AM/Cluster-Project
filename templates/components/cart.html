@@ -4,7 +4,7 @@
   </div>
   <div class="card-body" id="cart">
     <!-- Cart items will be dynamically generated here -->
-    <ul class="list-group">
+    <ul class="list-group" id="cart-items">
       <!-- Example item -->
       <!-- <li class="list-group-item d-flex justify-content-between align-items-center">
         2x Burger: Php 10.00
@@ -18,5 +18,40 @@
       <span class="fw-bold" id="cart-total">Php 0.00</span>
     </div>
     <button class="btn btn-primary w-100 mt-3" id="place-order-button">Place Order</button>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="edit-product-modal" tabindex="-1" aria-labelledby="edit-product-modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="edit-product-modal-label">Edit Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Product:</strong> <span id="edit-product-name"></span></p>
+        <input type="hidden" id="edit-product-id">
+        <div class="mb-3">
+          <label for="edit-product-quantity" class="form-label">Quantity</label>
+          <input type="number" class="form-control" id="edit-product-quantity" min="1">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Operation</label>
+          <div>
+            <input type="radio" id="operation-update" name="edit-operation" value="update" checked>
+            <label for="operation-update">Update Quantity</label>
+          </div>
+          <div>
+            <input type="radio" id="operation-remove" name="edit-operation" value="remove">
+            <label for="operation-remove">Remove Product</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveProductChanges()">Save Changes</button>
+      </div>
+    </div>
   </div>
 </div>

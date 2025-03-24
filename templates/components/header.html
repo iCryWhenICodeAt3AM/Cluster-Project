@@ -27,13 +27,17 @@
           <li class="nav-item">
             <a class="nav-link" href="#">About</a>
           </li> -->
-          <li class="nav-item">
-            <a class="nav-link" href="/my_orders.html">My Orders</a>
-          </li>
         </ul>
         <div class="d-flex align-items-center">
             <span class="me-3" id="user-greeting"></span>
-            <button class="btn btn-outline-secondary me-2" id="logout-button">Logout</button>
+            <a href="/my_orders.html" class="btn btn-outline-primary position-relative me-2 rounded-pill">
+              <i class="bi bi-card-checklist"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge bg-danger" id="orders-count">
+                0
+              </span>
+            </a>
+            <button class="btn btn-outline-secondary me-2" id="logout-button"><i class="bi bi-card-checklist"></i>
+              Logout</button>
         </div>
       </div>
     </div>

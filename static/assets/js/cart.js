@@ -22,10 +22,7 @@ document.addEventListener("DOMContentLoaded", function() {
               </div>
               <div class="text-end">
                 <span class="fw-bold">Php ${itemTotal}</span>
-                <div class="btn-group btn-group-sm mt-1">
-                  <button class="btn btn-outline-secondary" onclick="updateQuantity('${item.product_id}', -1)">-</button>
-                  <button class="btn btn-outline-secondary" onclick="updateQuantity('${item.product_id}', 1)">+</button>
-                </div>
+                <button class="btn btn-outline-secondary btn-sm mt-1" onclick="openEditModal('${item.product_id}')">Edit</button>
               </div>
             </div>
           </div>
@@ -49,30 +46,17 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
 
-    // Check if the product already exists in the cart
-    const existingProduct = cart.find(item => item.product_id === product.product_id);
-    const currentQuantity = existingProduct ? existingProduct.quantity : 0;
-
-    console.log(`Current quantity in cart: ${currentQuantity}, Requested quantity: ${quantity}, Stock: ${product.stock}`);
-
-    // Ensure the total quantity does not exceed the product's stock
-    if (currentQuantity + quantity > parseInt(product.stock)) {
-      alert(`Cannot add ${quantity} more items. Only ${product.stock - currentQuantity} left in stock.`);
-      console.log(`Add to cart failed: Exceeds stock. Available: ${product.stock - currentQuantity}`);
-      return;
-    }
-
-    // Add the new quantity to the product
+    // Prepare the product object with the quantity
     product.quantity = quantity;
 
     console.log("Sending product to server:", product);
 
-    fetch(`/api/cart/${userId}`, {
+    fetch('/add_to_cart', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(product)
+      body: JSON.stringify({ user_id: userId, product_id: product.product_id, product })
     })
       .then(response => {
         if (!response.ok) {
@@ -96,13 +80,113 @@ document.addEventListener("DOMContentLoaded", function() {
 
   function updateQuantity(productId, change) {
     const product = cart.find(item => item.product_id === productId);
+    // console.log('Updating quantity:', productId, change);
+    // console.log("Product object:", product);
     if (product) {
-      product.quantity = parseInt(product.quantity) + change;
-      if (product.quantity <= 0) {
-        cart = cart.filter(item => item.product_id !== productId);
-      }
-      updateCart();
+      const newQuantity = parseInt(product.quantity) + parseInt(change);
+      product.quantity = change;
+
+      console.log('Updated cart:', product);
+      // Push only the quantity change directly to the server
+      fetch(`/add_to_cart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId, product_id: productId, product })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to update quantity: ${response.statusText}`);
+          }
+          console.log('Quantity updated successfully:', response);
+          return response.json();
+        })
+        .then(data => {
+          console.log('New quantity:', newQuantity);
+          product.quantity = newQuantity; // Update the quantity in the cart 
+          // console.log('Quantity updated successfully product:', data);
+          updateCart(); // Update the UI after successful update
+        })
+        .catch(error => {
+          console.error('Error updating quantity:', error);
+          alert('An error occurred while updating the quantity. Please try again.');
+        });
     }
+  }
+
+  function openEditModal(productId) {
+    const product = cart.find(item => item.product_id === productId);
+    if (!product) return;
+
+    const modal = document.getElementById('edit-product-modal');
+    modal.querySelector('#edit-product-name').textContent = product.item;
+    modal.querySelector('#edit-product-quantity').value = product.quantity;
+    modal.querySelector('#edit-product-id').value = productId;
+
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+  }
+
+  function saveProductChanges() {
+    const productId = document.getElementById('edit-product-id').value;
+    const newQuantity = parseInt(document.getElementById('edit-product-quantity').value, 10);
+    const operation = document.querySelector('input[name="edit-operation"]:checked').value;
+  
+    if (operation === 'remove') {
+      cart = cart.filter(item => item.product_id !== productId);
+  
+      fetch('/add_to_cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, product_id: productId, product: { quantity: 0 } })
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to remove product: ${response.statusText}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Product removed successfully:', data);
+          updateCart();
+        })
+        .catch(error => {
+          console.error('Error removing product:', error);
+          alert('An error occurred while removing the product. Please try again.');
+        });
+    } else if (operation === 'update' && newQuantity > 0) {
+      const product = cart.find(item => item.product_id === productId);
+      if (product) {
+        product.quantity = newQuantity;
+  
+        fetch('/add_to_cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, product_id: productId, product })
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`Failed to update product: ${response.statusText}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('Product updated successfully:', data);
+            updateCart();
+          })
+          .catch(error => {
+            console.error('Error updating product:', error);
+            alert('An error occurred while updating the product. Please try again.');
+          });
+      }
+    } else {
+      alert('Invalid quantity. Please enter a positive number.');
+    }
+  
+    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('edit-product-modal'));
+    modalInstance.hide();
+    updateCart();
   }
 
   function fetchCart() {
@@ -139,6 +223,8 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   window.updateQuantity = updateQuantity; // Make updateQuantity function globally accessible
+  window.openEditModal = openEditModal;
+  window.saveProductChanges = saveProductChanges;
 
   fetchCart(); // Fetch the cart when the page loads
 

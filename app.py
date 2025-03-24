@@ -126,12 +126,14 @@ def add_to_cart():
     try:
         user_id = request.json.get('user_id')
         product = request.json.get('product')
-        if not user_id or not product:
-            return jsonify({'error': 'Missing user_id or product in request'}), 400
+        product_id = request.json.get('product_id')  # Ensure product_id is included
 
-        print(f"Adding to cart: user_id={user_id}, product={product}")
+        if not user_id or not product or not product_id:
+            return jsonify({'error': 'Missing user_id, product, or product_id in request'}), 400
 
-        response = requests.post(f"{API_BASE_URL}/api/cart/{user_id}", json=product)
+        print(f"Adding to cart: user_id={user_id}, product_id={product_id}, product={product}")
+
+        response = requests.post(f"{API_BASE_URL}/api/cart/{user_id}", json={'product_id': product_id, **product})
         if response.status_code == 200:
             cart = response.json()
             print(f"Successfully added to cart: {cart}")
