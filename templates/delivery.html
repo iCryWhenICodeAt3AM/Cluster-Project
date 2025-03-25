@@ -8,6 +8,51 @@
     <link rel="stylesheet" href="../static/assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.5/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .table {
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .badge {
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .btn-sm {
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link {
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            border-bottom: 3px solid #0d6efd;
+        }
+        .sortable {
+            cursor: pointer;
+        }
+        .sortable:hover {
+            background-color: #e9ecef;
+        }
+        .sortable i {
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+        .sort-active {
+            color: #0d6efd;
+        }
+        .sort-active i.bi-arrow-down-up::before {
+            content: "\f12b"; /* bi-arrow-down */
+        }
+        .sort-active.sort-desc i.bi-arrow-down-up::before {
+            content: "\f120"; /* bi-arrow-up */
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -44,11 +89,21 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Delivery Interface</h1>
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-7">
                 <input type="text" id="search-input" class="form-control" placeholder="Search by Order ID or Customer Name">
             </div>
+            <div class="col-md-3">
+                <select id="status-filter" class="form-select">
+                    <option value="all">All Statuses</option>
+                    <option value="Preparing">Preparing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Received">Received</option>
+                </select>
+            </div>
             <div class="col-md-2">
-                <button class="btn btn-primary w-100" onclick="filterOrders()">Search</button>
+                <button class="btn btn-primary w-100" onclick="applyFilters()">Filter</button>
             </div>
         </div>
         <ul class="nav nav-tabs" id="delivery-tabs" role="tablist">
@@ -89,10 +144,10 @@
                     <table class="table table-bordered table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>Order ID</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Status</th>
+                                <th class="sortable" data-field="order_id">Order ID <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-field="order_datetime">Date <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-field="customer_name">Customer <i class="bi bi-arrow-down-up"></i></th>
+                                <th class="sortable" data-field="status">Status <i class="bi bi-arrow-down-up"></i></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -229,220 +284,7 @@
         </div>
     </div>
 
-    <script>
-        // Logout functionality
-        document.getElementById('logout-button').addEventListener('click', function () {
-            fetch('/logout', { method: 'GET' })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || 'Logged out successfully!');
-                    sessionStorage.clear(); // Clear session storage
-                    window.location.href = data.redirect || '/signin.html'; // Redirect to sign-in page
-                })
-                .catch(error => console.error('Error during logout:', error));
-        });
-
-        // Filter orders based on search input across all tabs
-        function filterOrders() {
-            const searchInput = document.getElementById('search-input').value.toLowerCase();
-
-            // Get all table bodies for each tab
-            const tableBodies = [
-                document.getElementById('all-orders-table-body'),
-                document.getElementById('preparing-table-body'),
-                document.getElementById('shipping-table-body'),
-                document.getElementById('delivered-table-body'),
-                document.getElementById('cancelled-table-body'),
-                document.getElementById('received-table-body')
-            ];
-
-            // Apply the filter to each table body
-            tableBodies.forEach(tableBody => {
-                const rows = tableBody.querySelectorAll('tr');
-                rows.forEach(row => {
-                    const orderId = row.cells[0].textContent.toLowerCase();
-                    const customerName = row.cells[2].textContent.toLowerCase();
-
-                    if (orderId.includes(searchInput) || customerName.includes(searchInput)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            });
-        }
-
-        // Fetch orders for delivery
-        async function fetchOrders() {
-            try {
-                const response = await fetch('/api/orders');
-                const data = await response.json();
-                if (response.ok) {
-                    displayOrders(data.orders);
-                } else {
-                    console.error('Error fetching orders:', data.error);
-                }
-            } catch (error) {
-                console.error('Error fetching orders:', error);
-            }
-        }
-
-        // Display orders in respective tabs and update tab counts
-        function displayOrders(orders) {
-            const allOrdersBody = document.getElementById('all-orders-table-body');
-            const preparingBody = document.getElementById('preparing-table-body');
-            const shippingBody = document.getElementById('shipping-table-body');
-            const deliveredBody = document.getElementById('delivered-table-body');
-            const cancelledBody = document.getElementById('cancelled-table-body');
-            const receivedBody = document.getElementById('received-table-body');
-
-            // Clear existing content
-            allOrdersBody.innerHTML = '';
-            preparingBody.innerHTML = '';
-            shippingBody.innerHTML = '';
-            deliveredBody.innerHTML = '';
-            cancelledBody.innerHTML = '';
-            receivedBody.innerHTML = '';
-
-            // Initialize counters
-            let allOrdersCount = 0;
-            let preparingCount = 0;
-            let shippingCount = 0;
-            let deliveredCount = 0;
-            let cancelledCount = 0;
-            let receivedCount = 0;
-
-            orders.forEach(order => {
-                const nextStateButton = (order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'Received') 
-                    ? `<button class="btn btn-primary btn-sm" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">Next State</button>` 
-                    : '';
-
-                const row = `
-                    <tr>
-                        <td>${order.order_id}</td>
-                        <td>${new Date(order.order_datetime).toLocaleString()}</td>
-                        <td>${order.customer_name}</td>
-                        <td>${order.status}</td>
-                        <td>
-                            <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>Details</button>
-                            ${nextStateButton}
-                        </td>
-                    </tr>
-                `;
-
-                // Add to respective tab and increment counters
-                allOrdersBody.innerHTML += row;
-                allOrdersCount++;
-                if (order.status === 'Preparing') {
-                    preparingBody.innerHTML += row;
-                    preparingCount++;
-                }
-                if (order.status === 'Shipped') {
-                    shippingBody.innerHTML += row;
-                    shippingCount++;
-                }
-                if (order.status === 'Delivered') {
-                    deliveredBody.innerHTML += row;
-                    deliveredCount++;
-                }
-                if (order.status === 'Cancelled') {
-                    cancelledBody.innerHTML += row;
-                    cancelledCount++;
-                }
-                if (order.status === 'Received') {
-                    receivedBody.innerHTML += row;
-                    receivedCount++;
-                }
-            });
-
-            // Update tab counts
-            document.getElementById('all-orders-count').textContent = allOrdersCount;
-            document.getElementById('preparing-count').textContent = preparingCount;
-            document.getElementById('shipping-count').textContent = shippingCount;
-            document.getElementById('delivered-count').textContent = deliveredCount;
-            document.getElementById('cancelled-count').textContent = cancelledCount;
-            document.getElementById('received-count').textContent = receivedCount;
-        }
-
-        // Update order status
-        async function updateOrderStatus(orderId, currentStatus, customerName) {
-            const nextState = {
-                'Preparing': 'Shipped',
-                'Shipped': 'Delivered'
-            }[currentStatus];
-
-            if (!nextState) {
-                alert('Order is already delivered.');
-                return;
-            }
-
-            const payload = {
-                order_id: orderId,
-                status: nextState,
-                customer_name: customerName // Include customer_name in the payload
-            };
-
-            try {
-                const response = await fetch(`/api/orders/update-status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    alert('Order status updated successfully.');
-                    fetchOrders();
-                } else {
-                    const error = await response.json();
-                    alert(error.message || 'Failed to update order status.');
-                }
-            } catch (error) {
-                console.error('Error updating order status:', error);
-            }
-        }
-
-        // Show order details in a modal
-        function showOrderDetails(orderId, items, customerName, orderDate) {
-            let parsedItems;
-
-            // Attempt to parse the items JSON
-            try {
-                const decodedItems = decodeURIComponent(items);
-                parsedItems = JSON.parse(decodedItems);
-            } catch (error) {
-                console.error('Error parsing items JSON:', error);
-                alert('Failed to load order details due to invalid data.');
-                return;
-            }
-
-            // Populate modal fields
-            document.getElementById('modal-order-id').textContent = orderId;
-            document.getElementById('modal-customer-name').textContent = customerName;
-            document.getElementById('modal-order-date').textContent = new Date(orderDate).toLocaleString();
-
-            // Populate items table
-            const itemsTableBody = document.getElementById('modal-items-table-body');
-            itemsTableBody.innerHTML = ''; // Clear existing content
-            parsedItems.forEach(item => {
-                const row = `
-                    <tr>
-                        <td>${item.item}</td>
-                        <td>${item.description}</td>
-                        <td>${item.quantity}</td>
-                        <td>${item.price} PHP</td>
-                    </tr>
-                `;
-                itemsTableBody.innerHTML += row;
-            });
-
-            // Show the modal
-            const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-            orderDetailsModal.show();
-        }
-
-        // Load orders on page load
-        document.addEventListener('DOMContentLoaded', fetchOrders);
-    </script>
+    <script src="../static/assets/js/delivery.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

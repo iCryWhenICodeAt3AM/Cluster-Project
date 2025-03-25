@@ -16,13 +16,13 @@ import requests
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'supersecretkey'
 
-dynamodb = boto3.resource('dynamodb')
-padeliver_table_name = os.getenv('PADELIVER_PRODUCTS_TABLE')
+# dynamodb = boto3.resource('dynamodb')
+# padeliver_table_name = os.getenv('PADELIVER_PRODUCTS_TABLE')
 
-if not padeliver_table_name:
-    raise ValueError("PADELIVER_PRODUCTS_TABLE environment variable is not set")
+# if not padeliver_table_name:
+#     raise ValueError("PADELIVER_PRODUCTS_TABLE environment variable is not set")
 
-padeliver_table = dynamodb.Table(padeliver_table_name)
+# padeliver_table = dynamodb.Table(padeliver_table_name)
 
 API_BASE_URL = os.getenv('API_BASE_URL')
 
@@ -159,16 +159,16 @@ def get_cart(user_id):
         print(f"Error in get_cart: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/api/product-names', methods=['GET'])
-def get_product_names():
-    try:
-        response = padeliver_table.scan()
-        products = response.get('Items', [])
-        product_names = [{"id": product["product_id"], "name": product["item"]} for product in products]
-        return jsonify(product_names)
-    except Exception as e:
-        print(f"Error fetching product names: {e}")
-        return jsonify([])
+# @app.route('/api/product-names', methods=['GET'])
+# def get_product_names():
+#     try:
+#         response = padeliver_table.scan()
+#         products = response.get('Items', [])
+#         product_names = [{"id": product["product_id"], "name": product["item"]} for product in products]
+#         return jsonify(product_names)
+#     except Exception as e:
+#         print(f"Error fetching product names: {e}")
+#         return jsonify([])
 
 @app.route('/logout', methods=['GET'])
 def logout():

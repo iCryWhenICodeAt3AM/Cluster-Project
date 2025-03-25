@@ -14,18 +14,16 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   const tabCounts = {
-    Preparing: document.getElementById("preparing-count"),
-    Shipped: document.getElementById("shipped-count"),
-    Delivered: document.getElementById("delivered-count"),
-    Received: document.getElementById("received-count"),
+    All: document.getElementById("all-count"),
+    Current: document.getElementById("current-count"),
+    Past: document.getElementById("past-count"),
     Cancelled: document.getElementById("cancelled-count"),
   };
 
   const paginations = {
-    Preparing: document.getElementById("preparing-pagination"),
-    Shipped: document.getElementById("transport-pagination"),
-    Delivered: document.getElementById("delivered-pagination"),
-    Received: document.getElementById("received-pagination"),
+    All: document.getElementById("all-pagination"),
+    Current: document.getElementById("current-pagination"),
+    Past: document.getElementById("past-pagination"),
     Cancelled: document.getElementById("cancelled-pagination"),
   };
 
@@ -33,11 +31,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const paginatedOrders = {};
 
   function fetchOrders() {
+    console.log("Fetching orders for user:", userId);
     fetch(`/api/orders/${userId}`)
       .then((response) => response.json())
       .then((data) => {
         if (data.orders) {
-          displayOrdersByTab(data.orders);
+          console.log("Fetched orders:", data.orders);
+          categorizeAndDisplayOrders(data.orders);
         } else {
           console.error("Failed to fetch orders:", data.error);
         }
@@ -45,28 +45,37 @@ document.addEventListener("DOMContentLoaded", function () {
       .catch((error) => console.error("Error fetching orders:", error));
   }
 
-  function paginateOrders(orders) {
-    Object.keys(sections).forEach((status) => {
-      paginatedOrders[status] = [];
-    });
-
-    orders.forEach((order) => {
-      if (paginatedOrders[order.status]) {
-        paginatedOrders[order.status].push(order);
-      }
-    });
-
-    Object.keys(paginatedOrders).forEach((status) => {
-      displayOrders(status, 1);
+  function categorizeAndDisplayOrders(orders) {
+    console.log("Categorizing orders...");
+    
+    // Initialize categorized orders
+    const categorized = {
+      All: orders,
+      Current: orders.filter(order => ["Preparing", "Shipped", "Delivered"].includes(order.status)),
+      Past: orders.filter(order => order.status === "Received"),
+      Cancelled: orders.filter(order => order.status === "Cancelled")
+    };
+    
+    console.log("Categorized orders:", categorized);
+    
+    // Assign categorized orders to paginatedOrders
+    Object.keys(categorized).forEach(tab => {
+      paginatedOrders[tab] = categorized[tab];
+      console.log(`Tab ${tab} has ${paginatedOrders[tab].length} orders`);
+      displayOrders(tab, 1);
     });
   }
 
   function displayOrders(status, page) {
+    console.log(`Displaying ${status} orders, page ${page}`);
     const section = sections[status];
     const pagination = paginations[status];
     const orders = paginatedOrders[status] || [];
     const start = (page - 1) * ordersPerPage;
     const end = start + ordersPerPage;
+
+    console.log(`${status} orders:`, orders);
+    console.log(`Displaying orders from ${start} to ${end}`);
 
     // Clear the section
     section.innerHTML = "";
@@ -80,12 +89,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update the tab count
     const tabCount = tabCounts[status];
     if (tabCount) {
+      console.log(`Setting ${status} count to ${orders.length}`);
       tabCount.textContent = orders.length;
+    } else {
+      console.warn(`Tab count element for ${status} not found`);
     }
 
     // Add pagination controls
     const totalPages = Math.ceil(orders.length / ordersPerPage);
-    addPaginationControls(pagination, status, page, totalPages);
+    console.log(`Total pages for ${status}: ${totalPages}`);
+    if (pagination) {
+      addPaginationControls(pagination, status, page, totalPages);
+    } else {
+      console.warn(`Pagination element for ${status} not found`);
+    }
   }
 
   function addPaginationControls(pagination, status, currentPage, totalPages) {
@@ -134,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
         )}')">Show Details</button>
         ${
           order.status === "Preparing"
-            ? `<button class="btn btn-danger btn-sm flex-fill" style="margin-right: 0.5rem;" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
+            ? `<button class="btn btn-danger btn-sm flex-fill" style="margin  -right: 0.5rem;" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
             : ""
         }
         ${
@@ -368,26 +385,10 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   function displayOrdersByTab(orders) {
-    // Clear all sections
-    Object.values(sections).forEach((section) => (section.innerHTML = ""));
-
-    orders.forEach((order) => {
-      const card = createOrderCard(order);
-
-      // Add to "All" tab
-      sections.All.appendChild(card);
-
-      // Add to specific tabs based on status
-      if (["Preparing", "Shipped", "Delivered"].includes(order.status)) {
-        sections.Current.appendChild(card.cloneNode(true));
-      }
-      if (order.status === "Received") {
-        sections.Past.appendChild(card.cloneNode(true));
-      }
-      if (order.status === "Cancelled") {
-        sections.Cancelled.appendChild(card.cloneNode(true));
-      }
-    });
+    console.log("Display orders by tab called with", orders.length, "orders");
+    
+    // Categorize orders
+    categorizeAndDisplayOrders(orders);
   }
 
   fetchOrders();
