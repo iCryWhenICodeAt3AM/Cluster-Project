@@ -16,13 +16,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const cartItem = `
           <div class="cart-item py-3">
             <div class="d-flex justify-content-between">
-              <div>
+              <div class="d-flex justify-content-center align-items-center">
+                <button class="btn btn-outline-secondary btn-sm mt-1" onclick="openEditModal('${item.product_id}')">Edit</button>
                 <h6 class="mb-1">${item.quantity}x ${item.item}</h6>
-                <p class="text-muted small mb-0">${item.description}</p>
               </div>
               <div class="text-end">
                 <span class="fw-bold">Php ${itemTotal}</span>
-                <button class="btn btn-outline-secondary btn-sm mt-1" onclick="openEditModal('${item.product_id}')">Edit</button>
               </div>
             </div>
           </div>

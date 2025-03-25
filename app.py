@@ -29,6 +29,9 @@ API_BASE_URL = os.getenv('API_BASE_URL')
 if not API_BASE_URL:
     raise ValueError("API_BASE_URL environment variable is not set")
 
+UPLOAD_FOLDER = 'static/uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 @app.route('/')
 def hello_world():
     """Render the index page."""
@@ -217,8 +220,14 @@ def add_padeliver_product():
         product_data = request.json
         if not product_data:
             return jsonify({'error': 'Missing product data'}), 400
+        print(f"Received product data: {product_data}")
+        # Validate required fields
+        required_fields = ['product_id', 'item', 'description', 'price', 'brand', 'category', 'product_image_url']
+        missing_fields = [field for field in required_fields if field not in product_data or not product_data[field]]
+        if missing_fields:
+            return jsonify({'error': f'Missing required fields: {", ".join(missing_fields)}'}), 400
 
-        # Send the product data to the external API
+        # Forward the product data to the external API
         response = requests.post(f"{API_BASE_URL}/api/padeliver-product", json=product_data)
         if response.status_code == 200:
             return jsonify(response.json()), 200
@@ -503,6 +512,42 @@ def delete_from_cart(user_id):
             return jsonify(response.json()), 200
         else:
             return jsonify({'error': 'Failed to remove product from cart'}), response.status_code
+    except Exception as e:
+        return jsonify({'error': f'Internal server error: {str(e)}'}), 500
+
+@app.route('/api/upload-image', methods=['POST'])
+def upload_image():
+    """Handle image upload and forward it to the external API."""
+    try:
+        # Get the payload from the request
+        payload = request.json
+        if not payload or not all(key in payload for key in ("image_data", "image_type", "image_name")):
+            return jsonify({"error": "Invalid payload. 'image_data', 'image_type', and 'image_name' are required."}), 400
+
+        # Forward the payload to the external API
+        response = requests.post(f"{API_BASE_URL}/api/upload-image", json=payload)
+
+        if response.status_code == 200:
+            return jsonify(response.json()), 200
+        else:
+            return jsonify({"error": "Failed to upload image", "details": response.text}), response.status_code
+    except Exception as e:
+        return jsonify({"error": "An error occurred", "details": str(e)}), 500
+
+@app.route('/api/brand-images', methods=['GET'])
+def get_brand_images():
+    """Fetch brand images from the external API and return them."""
+    try:
+        # External API URL
+        brand_images_url = f"{API_BASE_URL}/api/get-brand-images"
+        
+        # Make the GET request to the external API
+        response = requests.get(brand_images_url)
+        if response.status_code == 200:
+            brand_images = response.json()
+            return jsonify(brand_images), 200
+        else:
+            return jsonify({'error': 'Failed to fetch brand images'}), response.status_code
     except Exception as e:
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
 

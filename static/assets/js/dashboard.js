@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
-            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <img src="${product.product_image_url}" alt="Product" class="product-img me-3">
             <div>
               <h6 class="mb-0">${product.item}</h6>
               <small class="text-muted">#${product.product_id}</small>
@@ -276,11 +276,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const stockBadgeClass = product.stock < 10 ? "bg-danger" : product.stock < 30 ? "bg-warning" : "bg-success";
       const status = product.stock === 0 ? "Inactive" : "Active";
       const statusClass = product.stock === 0 ? "status-inactive" : "status-active";
+      const productImage = product.product_image_url || `${product.brand}.jpg`; // Use S3 image URL if available
 
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
-            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <img src="${productImage}" alt="Product" class="product-img me-3">
             <div>
               <h6 class="mb-0">${product.item}</h6>
               <small class="text-muted">#${product.product_id}</small>
@@ -598,43 +599,87 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Add Product Form Submission
   const addProductForm = document.querySelector("#addProductModal form");
-  addProductForm.addEventListener("submit", function (e) {
+  addProductForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const productCategoryDropdown = document.getElementById("productCategory");
     const newCategoryInput = document.getElementById("newCategoryInput");
     const productCategory = newCategoryInput.value.trim() || productCategoryDropdown.value;
 
-    const productData = {
-      product_id: document.getElementById("productId").value,
-      item: document.getElementById("productName").value,
-      description: document.getElementById("productDescription").value,
-      price: document.getElementById("productPrice").value,
-      brand: document.getElementById("productBrand").value,
-      category: productCategory, // Use the new category if provided, otherwise use the dropdown value
+    const productImage = document.getElementById("productImage").files[0];
+    const brandImage = document.getElementById("brandImage").files[0];
+
+    const uploadImage = async (imageFile, imageType, imageName) => {
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+            reader.onload = async () => {
+                const base64Image = reader.result.split(",")[1]; // Extract Base64 data
+                const payload = {
+                    image_data: base64Image,
+                    image_type: imageType,
+                    image_name: imageName,
+                };
+
+                try {
+                    const response = await fetch("/api/upload-image", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        reject(new Error(errorData.error || "Failed to upload image."));
+                    }
+
+                    const data = await response.json();
+                    resolve(data.image_url); // Return the uploaded image URL
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = () => reject(new Error("Failed to read image file."));
+            reader.readAsDataURL(imageFile);
+        });
     };
 
-    fetch("/api/padeliver-product", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(productData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.message === "Product added successfully") {
-          alert("Product added successfully!");
-          addProductForm.reset();
-          // Re-fetch and update the product list
-          fetchProducts();
-        } else {
-          alert(data.error || data.message || "Error adding product");
-          if (data.invalid_field) {
-            document.getElementById(data.invalid_field).classList.add("is-invalid");
-          }
+    try {
+        const productImageUrl = productImage
+            ? await uploadImage(productImage, "product", document.getElementById("productName").value.replace(/\s+/g, "_"))
+            : null;
+        const brandImageUrl = brandImage
+            ? await uploadImage(brandImage, "brand", document.getElementById("productBrand").value.replace(/\s+/g, "_"))
+            : null;
+
+        const payload = {
+            product_id: document.getElementById("productId").value,
+            item: document.getElementById("productName").value,
+            description: document.getElementById("productDescription").value,
+            price: document.getElementById("productPrice").value,
+            brand: document.getElementById("productBrand").value,
+            category: productCategory,
+            product_image_url: productImageUrl, // Use the uploaded product image URL
+        };
+
+        const response = await fetch("/api/padeliver-product", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to add product.");
         }
-      })
-      .catch((error) => console.error("Error adding product:", error));
-  });
+
+        alert(data.message || "Product added successfully!");
+        addProductForm.reset();
+        fetchProducts(); // Refresh the product list
+    } catch (error) {
+        console.error("Error adding product:", error);
+        alert(error.message || "An error occurred while adding the product.");
+    }
+});
 
   // Fetch and populate categories on page load
   fetchProducts();
@@ -813,7 +858,7 @@ document.addEventListener("DOMContentLoaded", function () {
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
-            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <img src="${product.product_image_url}" alt="Product" class="product-img me-3">
             <div>
               <h6 class="mb-0">${product.item}</h6>
               <small class="text-muted">#${product.product_id}</small>
@@ -909,7 +954,7 @@ document.addEventListener("DOMContentLoaded", function () {
       row.innerHTML = `
         <td>
           <div class="d-flex align-items-center">
-            <img src="../static/assets/${product.brand}.jpg" alt="Product" class="product-img me-3">
+            <img src="${product.product_image_url}" alt="Product" class="product-img me-3">
             <div>
               <h6 class="mb-0">${product.item}</h6>
               <small class="text-muted">#${product.product_id}</small>
@@ -1007,7 +1052,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const aValue = a[currentSortKeyInventory];
         const bValue = b[currentSortKeyInventory];
         if (aValue < bValue) return currentSortOrderInventory === "asc" ? -1 : 1;
-        if (aValue > bValue) return currentSortOrderInventory === "asc" ? 1 : -1;
         return 0;
       });
     }

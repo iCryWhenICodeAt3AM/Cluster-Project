@@ -1,7 +1,25 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
   const urlParams = new URLSearchParams(window.location.search);
   const restaurant = urlParams.get('restaurant');
   document.getElementById('restaurant-name').textContent = `${restaurant} Menu`;
+
+  // Fetch brand images
+  const brandImages = await fetch("/api/brand-images")
+    .then(response => response.json())
+    .then(data => {
+      const baseUrl = data.images[0]; // Base URL for brand images
+      const images = data.images.slice(1); // List of brand image URLs
+      const imageMap = {};
+      images.forEach(image => {
+        const brandName = image.split("/").pop().split(".")[0]; // Extract brand name from URL
+        imageMap[brandName] = image;
+      });
+      return { baseUrl, imageMap };
+    })
+    .catch(error => {
+      console.error("Failed to fetch brand images:", error);
+      return { baseUrl: "", imageMap: {} };
+    });
 
   fetch("/api/products")
     .then(response => response.json())
@@ -39,28 +57,28 @@ document.addEventListener("DOMContentLoaded", function() {
         const filteredProducts = category === "All" ? restaurantProducts : restaurantProducts.filter(product => product.category === category);
         filteredProducts.forEach(product => {
           if (product.stock === 0) return; // Skip products with stock = 0
+          const productImage = product.product_image_url || `../static/assets/${product.brand}.jpg`; // Use S3 image URL if available
           const productCard = `
         <div class="col-md-6 mb-4">
           <div class="card food-item h-100 d-flex flex-column" data-product-id="${product.product_id}" data-product-stock="${product.stock}">
             <div class="row g-0 flex-grow-1">
-          <div class="col-4">
-            <img src="../static/assets/${product.brand}.jpg" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
-          </div>
-          <div class="col-8 d-flex flex-column">
-            <div class="card-body d-flex flex-column flex-grow-1">
-              <h5 class="card-title">${product.item}</h5>
-              <p class="card-text text-muted small flex-grow-1">${product.product_description}</p>
-              <p class="card-text small">Stock: ${product.stock}</p>
-              <div class="d-flex justify-content-between align-items-center mt-auto">
-                <span class="fw-bold">Php ${product.price}</span>
-                <button class="btn btn-sm btn-primary">Add</button> 
+              <div class="col-4">
+                <img src="${productImage}" class="img-fluid rounded-start" alt="${product.item}" style="width: 100%; height: auto;">
+              </div>
+              <div class="col-8 d-flex flex-column">
+                <div class="card-body d-flex flex-column flex-grow-1">
+                  <h5 class="card-title">${product.item}</h5>
+                  <p class="card-text text-muted small flex-grow-1">${product.product_description}</p>
+                  <p class="card-text small">Stock: ${product.stock}</p>
+                  <div class="d-flex justify-content-between align-items-center mt-auto">
+                    <span class="fw-bold">Php ${product.price}</span>
+                    <button class="btn btn-sm btn-primary">Add</button> 
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-            </div>
-          </div>
-        </div>
-          `;
+        </div>`;
           menu.insertAdjacentHTML("beforeend", productCard);
         });
       }
@@ -72,12 +90,12 @@ document.addEventListener("DOMContentLoaded", function() {
       brands.forEach(brand => {
         const brandProducts = products.filter(product => product.brand === brand && product.stock > 0); // Filter out products with stock = 0
         const categories = [...new Set(brandProducts.map(product => product.category))].slice(0, 3);
-        const brandImage = brand + ".jpg";
+        const brandImage = brandImages.imageMap[brand] || `../static/assets/${brand}.jpg`; // Use fetched brand image or fallback
         const restaurantCard = `
           <div class="col-md-2 col-sm-4">
             <div class="card restaurant-card h-100 shadow-sm">
               <a href="/restaurant.html?restaurant=${brand}">
-                <img src="../static/assets/${brandImage}" class="card-img-top" alt="${brand}" style="width: 100%; height: auto;">
+                <img src="${brandImage}" class="card-img-top" alt="${brand}" style="width: 100%; height: auto;">
               </a>
               <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
