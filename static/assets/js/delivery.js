@@ -15,16 +15,10 @@ let currentOrders = [];
 let currentSortField = 'order_datetime';
 let currentSortDirection = 'desc'; // newest first by default
 
-// Enhanced filter function that handles both search input and status filter
-function applyFiltersAndSort() {
+// Simplified filter function
+function applyFilters() {
     const searchInput = document.getElementById('search-input').value.toLowerCase();
     const statusFilter = document.getElementById('status-filter').value;
-    const sortField = document.getElementById('sort-field').value;
-    const sortDirection = document.getElementById('sort-direction').value;
-    
-    // Update current sort settings
-    currentSortField = sortField;
-    currentSortDirection = sortDirection;
     
     // First filter the orders
     let filteredOrders = currentOrders.filter(order => {
@@ -35,11 +29,16 @@ function applyFiltersAndSort() {
         return matchesSearch && matchesStatus;
     });
     
-    // Then sort the filtered orders
+    // Sort filtered orders
     sortOrders(filteredOrders);
     
     // Display the filtered and sorted orders
     displayFilteredOrders(filteredOrders);
+}
+
+// Shorthand for legacy function
+function filterOrders() {
+    applyFilters();
 }
 
 // Function to sort orders based on current sort settings
@@ -51,6 +50,17 @@ function sortOrders(orders) {
         if (currentSortField === 'order_datetime') {
             valA = new Date(a[currentSortField]);
             valB = new Date(b[currentSortField]);
+        } else if (currentSortField === 'status') {
+            // Custom sort order for statuses
+            const statusOrder = {
+                'Preparing': 1,
+                'Shipped': 2,
+                'Delivered': 3,
+                'Received': 4,
+                'Cancelled': 5
+            };
+            valA = statusOrder[a.status] || 999; // Default high value for unknown statuses
+            valB = statusOrder[b.status] || 999;
         } else {
             valA = a[currentSortField].toString().toLowerCase();
             valB = b[currentSortField].toString().toLowerCase();
@@ -85,15 +95,24 @@ function displayFilteredOrders(filteredOrders) {
     
     // Populate tables with filtered orders
     filteredOrders.forEach(order => {
-        let nextStateButton = '';
+        let actionButtons = '';
+        
+        // Reorder buttons: Details first, Return to in the middle, Move to last
         if (order.status === 'Preparing') {
-            nextStateButton = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">
-                                <i class="bi bi-arrow-right-circle"></i> Move to Shipped
-                              </button>`;
+            actionButtons = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                            <i class="bi bi-arrow-right-circle"></i> Move to Shipped
+                          </button>`;
         } else if (order.status === 'Shipped') {
-            nextStateButton = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">
-                                <i class="bi bi-arrow-right-circle"></i> Move to Delivered
-                              </button>`;
+            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                            <i class="bi bi-arrow-left-circle"></i> Return to Preparing
+                          </button>
+                          <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                            <i class="bi bi-arrow-right-circle"></i> Move to Delivered
+                          </button>`;
+        } else if (order.status === 'Delivered') {
+            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                            <i class="bi bi-arrow-left-circle"></i> Return to Shipped
+                          </button>`;
         }
 
         const row = `
@@ -106,7 +125,7 @@ function displayFilteredOrders(filteredOrders) {
                     <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>
                         <i class="bi bi-info-circle"></i> Details
                     </button>
-                    ${nextStateButton}
+                    ${actionButtons}
                 </td>
             </tr>
         `;
@@ -129,7 +148,7 @@ function displayFilteredOrders(filteredOrders) {
     });
 }
 
-// Modify the existing fetchOrders function to use the new filtering and sorting
+// Fetch orders for delivery
 async function fetchOrders() {
     try {
         const response = await fetch('/api/orders');
@@ -177,121 +196,11 @@ function setupSortableHeaders() {
                 this.classList.add('sort-desc');
             }
             
-            // Update sort dropdowns to match current sort
-            document.getElementById('sort-field').value = currentSortField;
-            document.getElementById('sort-direction').value = currentSortDirection;
-            
-            // Apply sort and redisplay
+            // Apply sort and reapply filters
             sortOrders(currentOrders);
-            applyFiltersAndSort();
+            applyFilters();
         });
     });
-}
-
-// Update the original filterOrders function to use the new combined function
-function filterOrders() {
-    applyFiltersAndSort();
-}
-
-// Fetch orders for delivery
-async function fetchOrders() {
-    try {
-        const response = await fetch('/api/orders');
-        const data = await response.json();
-        if (response.ok) {
-            displayOrders(data.orders);
-        } else {
-            console.error('Error fetching orders:', data.error);
-        }
-    } catch (error) {
-        console.error('Error fetching orders:', error);
-    }
-}
-
-// Display orders in respective tabs and update tab counts
-function displayOrders(orders) {
-    const allOrdersBody = document.getElementById('all-orders-table-body');
-    const preparingBody = document.getElementById('preparing-table-body');
-    const shippingBody = document.getElementById('shipping-table-body');
-    const deliveredBody = document.getElementById('delivered-table-body');
-    const cancelledBody = document.getElementById('cancelled-table-body');
-    const receivedBody = document.getElementById('received-table-body');
-
-    // Clear existing content
-    allOrdersBody.innerHTML = '';
-    preparingBody.innerHTML = '';
-    shippingBody.innerHTML = '';
-    deliveredBody.innerHTML = '';
-    cancelledBody.innerHTML = '';
-    receivedBody.innerHTML = '';
-
-    // Initialize counters
-    let allOrdersCount = 0;
-    let preparingCount = 0;
-    let shippingCount = 0;
-    let deliveredCount = 0;
-    let cancelledCount = 0;
-    let receivedCount = 0;
-
-    orders.forEach(order => {
-        let nextStateButton = '';
-        if (order.status === 'Preparing') {
-            nextStateButton = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">
-                                <i class="bi bi-arrow-right-circle"></i> Move to Shipped
-                              </button>`;
-        } else if (order.status === 'Shipped') {
-            nextStateButton = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}')">
-                                <i class="bi bi-arrow-right-circle"></i> Move to Delivered
-                              </button>`;
-        }
-
-        const row = `
-            <tr>
-                <td>${order.order_id}</td>
-                <td>${new Date(order.order_datetime).toLocaleString()}</td>
-                <td>${order.customer_name}</td>
-                <td><span class="badge ${getBadgeClass(order.status)}">${order.status}</span></td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>
-                        <i class="bi bi-info-circle"></i> Details
-                    </button>
-                    ${nextStateButton}
-                </td>
-            </tr>
-        `;
-
-        // Add to respective tab and increment counters
-        allOrdersBody.innerHTML += row;
-        allOrdersCount++;
-        if (order.status === 'Preparing') {
-            preparingBody.innerHTML += row;
-            preparingCount++;
-        }
-        if (order.status === 'Shipped') {
-            shippingBody.innerHTML += row;
-            shippingCount++;
-        }
-        if (order.status === 'Delivered') {
-            deliveredBody.innerHTML += row;
-            deliveredCount++;
-        }
-        if (order.status === 'Cancelled') {
-            cancelledBody.innerHTML += row;
-            cancelledCount++;
-        }
-        if (order.status === 'Received') {
-            receivedBody.innerHTML += row;
-            receivedCount++;
-        }
-    });
-
-    // Update tab counts
-    document.getElementById('all-orders-count').textContent = allOrdersCount;
-    document.getElementById('preparing-count').textContent = preparingCount;
-    document.getElementById('shipping-count').textContent = shippingCount;
-    document.getElementById('delivered-count').textContent = deliveredCount;
-    document.getElementById('cancelled-count').textContent = cancelledCount;
-    document.getElementById('received-count').textContent = receivedCount;
 }
 
 // Helper function to get appropriate badge class for order status
@@ -313,21 +222,35 @@ function getBadgeClass(status) {
 }
 
 // Update order status
-async function updateOrderStatus(orderId, currentStatus, customerName) {
-    const nextState = {
-        'Preparing': 'Shipped',
-        'Shipped': 'Delivered'
-    }[currentStatus];
-
-    if (!nextState) {
-        alert('Order is already delivered.');
-        return;
+async function updateOrderStatus(orderId, currentStatus, customerName, direction) {
+    let nextState;
+    
+    if (direction === 'forward') {
+        nextState = {
+            'Preparing': 'Shipped',
+            'Shipped': 'Delivered'
+        }[currentStatus];
+        
+        if (!nextState) {
+            alert('Order is already delivered.');
+            return;
+        }
+    } else if (direction === 'backward') {
+        nextState = {
+            'Shipped': 'Preparing',
+            'Delivered': 'Shipped'
+        }[currentStatus];
+        
+        if (!nextState) {
+            alert('Order is already in the initial state.');
+            return;
+        }
     }
 
     const payload = {
         order_id: orderId,
         status: nextState,
-        customer_name: customerName // Include customer_name in the payload
+        customer_name: customerName
     };
 
     try {
@@ -338,7 +261,11 @@ async function updateOrderStatus(orderId, currentStatus, customerName) {
         });
 
         if (response.ok) {
-            alert('Order status updated successfully.');
+            if (direction === 'forward') {
+                alert(`Order successfully moved to ${nextState}.`);
+            } else {
+                alert(`Order successfully returned to ${nextState}.`);
+            }
             fetchOrders();
         } else {
             const error = await response.json();
@@ -386,6 +313,104 @@ function showOrderDetails(orderId, items, customerName, orderDate) {
     // Show the modal
     const orderDetailsModal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
     orderDetailsModal.show();
+}
+
+// Display all orders with tab counts
+function displayOrders(orders) {
+    // Store orders globally
+    currentOrders = orders;
+    
+    const allOrdersBody = document.getElementById('all-orders-table-body');
+    const preparingBody = document.getElementById('preparing-table-body');
+    const shippingBody = document.getElementById('shipping-table-body');
+    const deliveredBody = document.getElementById('delivered-table-body');
+    const cancelledBody = document.getElementById('cancelled-table-body');
+    const receivedBody = document.getElementById('received-table-body');
+
+    // Clear existing content
+    allOrdersBody.innerHTML = '';
+    preparingBody.innerHTML = '';
+    shippingBody.innerHTML = '';
+    deliveredBody.innerHTML = '';
+    cancelledBody.innerHTML = '';
+    receivedBody.innerHTML = '';
+
+    // Initialize counters
+    let allOrdersCount = 0;
+    let preparingCount = 0;
+    let shippingCount = 0;
+    let deliveredCount = 0;
+    let cancelledCount = 0;
+    let receivedCount = 0;
+
+    orders.forEach(order => {
+        let actionButtons = '';
+        
+        // Reorder buttons: Details first, Return to in the middle, Move to last
+        if (order.status === 'Preparing') {
+            actionButtons = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                            <i class="bi bi-arrow-right-circle"></i> Move to Shipped
+                          </button>`;
+        } else if (order.status === 'Shipped') {
+            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                            <i class="bi bi-arrow-left-circle"></i> Return to Preparing
+                          </button>
+                          <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                            <i class="bi bi-arrow-right-circle"></i> Move to Delivered
+                          </button>`;
+        } else if (order.status === 'Delivered') {
+            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                            <i class="bi bi-arrow-left-circle"></i> Return to Shipped
+                          </button>`;
+        }
+
+        const row = `
+            <tr>
+                <td>${order.order_id}</td>
+                <td>${new Date(order.order_datetime).toLocaleString()}</td>
+                <td>${order.customer_name}</td>
+                <td><span class="badge ${getBadgeClass(order.status)}">${order.status}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>
+                        <i class="bi bi-info-circle"></i> Details
+                    </button>
+                    ${actionButtons}
+                </td>
+            </tr>
+        `;
+
+        // Add to respective tab and increment counters
+        allOrdersBody.innerHTML += row;
+        allOrdersCount++;
+        if (order.status === 'Preparing') {
+            preparingBody.innerHTML += row;
+            preparingCount++;
+        }
+        if (order.status === 'Shipped') {
+            shippingBody.innerHTML += row;
+            shippingCount++;
+        }
+        if (order.status === 'Delivered') {
+            deliveredBody.innerHTML += row;
+            deliveredCount++;
+        }
+        if (order.status === 'Cancelled') {
+            cancelledBody.innerHTML += row;
+            cancelledCount++;
+        }
+        if (order.status === 'Received') {
+            receivedBody.innerHTML += row;
+            receivedCount++;
+        }
+    });
+
+    // Update tab counts
+    document.getElementById('all-orders-count').textContent = allOrdersCount;
+    document.getElementById('preparing-count').textContent = preparingCount;
+    document.getElementById('shipping-count').textContent = shippingCount;
+    document.getElementById('delivered-count').textContent = deliveredCount;
+    document.getElementById('cancelled-count').textContent = cancelledCount;
+    document.getElementById('received-count').textContent = receivedCount;
 }
 
 // Load orders on page load

@@ -8,179 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="icon" href="../static/assets/favicon.ico" type="image/x-icon">
-    <style>
-        :root {
-            --primary: #FF6B35;
-            --secondary: #004E89;
-        }
-        
-        body {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary) !important;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .btn-primary:hover {
-            background-color: #e55a2a;
-            border-color: #e55a2a;
-        }
-        
-        .btn-outline-primary {
-            color: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        .btn-outline-primary:hover {
-            background-color: var(--primary);
-            border-color: var(--primary);
-        }
-        
-        /* Admin Dashboard Specific Styles */
-        .admin-content {
-            flex: 1;
-            display: flex;
-        }
-        
-        .sidebar {
-            width: 250px;
-            background-color: #343a40;
-            color: white;
-            padding: 20px 0;
-            min-height: calc(100vh - 56px);
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-left: 4px solid transparent;
-        }
-        
-        .sidebar .nav-link:hover, 
-        .sidebar .nav-link.active {
-            background-color: rgba(255, 107, 53, 0.2);
-            color: white;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .sidebar .nav-link i {
-            margin-right: 10px;
-        }
-        
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        
-        .admin-card {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-        
-        .admin-card-header {
-            background-color: #fff;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .admin-card-body {
-            padding: 20px;
-        }
-        
-        .product-table th,
-        .product-table td {
-            vertical-align: middle;
-        }
-        
-        .product-img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
-        
-        .badge-low {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .badge-medium {
-            background-color: #ffc107;
-            color: black;
-        }
-        
-        .badge-high {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-        
-        .status-active {
-            background-color: #28a745;
-        }
-        
-        .status-inactive {
-            background-color: #dc3545;
-        }
-        
-        /* Modal styles */
-        .modal-header {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .modal-header .btn-close {
-            color: white;
-        }
-        
-        .preview-image {
-            max-width: 100%;
-            max-height: 200px;
-            object-fit: contain;
-            margin-top: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .admin-content {
-                flex-direction: column;
-            }
-            
-            .sidebar {
-                width: 100%;
-                min-height: auto;
-            }
-            
-            .sidebar ul {
-                display: flex;
-                flex-wrap: wrap;
-            }
-            
-            .sidebar .nav-item {
-                width: 50%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../static/assets/css/dashboard.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -232,17 +60,17 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#">
-                        <i class="bi bi-people"></i> Users
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">
                         <i class="bi bi-shop"></i> Restaurants
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="#" data-section="order-management">
                         <i class="bi bi-cart3"></i> Orders
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-section="user-management">
+                        <i class="bi bi-people"></i> Users
                     </a>
                 </li>
                 <li class="nav-item">
@@ -335,11 +163,11 @@
 
                 <!-- Low Stock Products -->
                 <div class="card admin-card">
-                    <div class="admin-card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Low Stock Products</h5>
                         <a href="#" class="btn btn-sm btn-outline-primary" data-section="inventory-management">View All</a>
                     </div>
-                    <div class="admin-card-body">
+                    <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover product-table">
                                 <thead>
@@ -352,7 +180,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="low-stock">
-                                   <!-- Low stock product rows will be dynamically generated here -->
+                                    <!-- Low stock product rows will be dynamically generated here -->
                                 </tbody>
                             </table>
                         </div>
@@ -405,6 +233,7 @@
                                         <th data-sort="item" data-order="asc">Product Name</th>
                                         <th data-sort="category" data-order="asc">Category</th>
                                         <th data-sort="price" data-order="asc">Price</th>
+                                        <th data-sort="brand" data-order="asc">Brand</th>
                                         <th data-sort="stock" data-order="asc">Stock</th>
                                         <th>Status</th>
                                         <th>Action</th>
@@ -503,6 +332,66 @@
                             <div id="inventory-pagination-buttons" class="d-flex align-items-center">
                                 <!-- Pagination buttons will be dynamically generated here -->
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Management Section -->
+            <div id="order-management" class="content-section" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb0">Order Management</h2>
+                </div>
+                <div class="card admin-card">
+                    <div class="admin-card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-table-body">
+                                    <!-- Orders will be dynamically loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pagination-controls-orders" class="mt-3 d-flex justify-content-between align-items-center">
+                            <!-- Pagination controls for orders will be dynamically generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Section -->
+            <div id="user-management" class="content-section" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb0">User Management</h2>
+                </div>
+                <div class="card admin-card">
+                    <div class="admin-card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- Users will be dynamically loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="pagination-controls-users" class="mt-3 d-flex justify-content-between align-items-center">
+                            <!-- Pagination controls for users will be dynamically generated here -->
                         </div>
                     </div>
                 </div>
@@ -643,102 +532,7 @@
     <!-- Bootstrap JS from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="../static/assets/js/dashboard.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Sidebar navigation
-            const navLinks = document.querySelectorAll('.nav-link[data-section]');
-            const contentSections = document.querySelectorAll('.content-section');
-
-            navLinks.forEach(link => {
-                link.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const sectionId = this.getAttribute('data-section');
-
-                    // Hide all sections
-                    contentSections.forEach(section => {
-                        section.style.display = 'none';
-                    });
-
-                    // Show the selected section
-                    document.getElementById(sectionId).style.display = 'block';
-
-                    // Remove active class from all links
-                    navLinks.forEach(link => {
-                        link.classList.remove('active');
-                    });
-
-                    // Add active class to the clicked link
-                    this.classList.add('active');
-                });
-            });
-
-        document.getElementById('addNewCategoryButton').addEventListener('click', function () {
-            const newCategoryInput = document.getElementById('newCategoryInput');
-            newCategoryInput.classList.toggle('d-none');
-            if (!newCategoryInput.classList.contains('d-none')) {
-                newCategoryInput.focus();
-            }
-        });
-        
-        document.getElementById('logout-button').addEventListener('click', function() {
-            fetch('/logout', { method: 'GET' })
-              .then(response => response.json())
-              .then(data => {
-                alert(data.message || 'Logged out successfully!');
-                sessionStorage.clear(); // Clear session storage
-                window.location.href = data.redirect || '/signin.html'; // Redirect to sign-in page
-              })
-              .catch(error => console.error('Error during logout:', error));
-          });
-        });
-
-        // Function to handle product deletion
-        function deleteProduct(productId) {
-            if (!confirm('Are you sure you want to delete this product?')) {
-            return;
-            }
-
-            fetch(`/api/delete-product/${productId}`, {
-            method: 'DELETE',
-            })
-            .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-            return response.text(); // Expecting plain text response
-            })
-            .then(message => {
-                alert(message.message || 'Product deleted successfully!');
-                location.reload(); // Reload the page to reflect changes
-            })
-            .catch(error => {
-            console.error('Error deleting product:', error);
-            alert('An error occurred. Please check the server logs or try again.');
-            });
-        }
-
-        // Attach delete button functionality dynamically
-        document.getElementById('products-stock').addEventListener('click', function (e) {
-            const target = e.target.closest('.btn-delete'); // Ensure the correct button is targeted
-            if (target) {
-                const productId = target.getAttribute('data-product-id'); // Get the product ID
-                if (productId) {
-                    deleteProduct(productId);
-                } else {
-                    console.error('Product ID not found on delete button.');
-                }
-            }
-        });
-
-        const currentDateElement = document.getElementById('current-date');
-        const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        currentDateElement.textContent = `Today: ${formattedDate}`;
-    </script>
+    <script src="../static/assets/js/dashboard-component.js"></script>
+    <script src="../static/assets/js/dashboard-orders.js"></script>
 </body>
 </html>

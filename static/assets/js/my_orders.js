@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     Cancelled: document.getElementById("cancelled-pagination"),
   };
 
-  const ordersPerPage = 5;
+  const ordersPerPage = 3;
   const paginatedOrders = {};
 
   function fetchOrders() {
