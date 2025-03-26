@@ -1,16 +1,16 @@
 import sys
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# # Load environment variables from .env file
+# load_dotenv()
 
-# Add the virtual environment's site-packages directory to the Python path
-venv_path = os.path.join(os.path.dirname(__file__), 'venv', 'Lib', 'site-packages')
-sys.path.append(venv_path)
+# # Add the virtual environment's site-packages directory to the Python path
+# venv_path = os.path.join(os.path.dirname(__file__), 'venv', 'Lib', 'site-packages')
+# sys.path.append(venv_path)
 
 from flask import Flask, render_template, jsonify, request, session, redirect
-import boto3
+# import boto3
 import requests
 
 app = Flask(__name__, static_folder='static')
@@ -26,11 +26,11 @@ app.secret_key = 'supersecretkey'
 
 API_BASE_URL = os.getenv('API_BASE_URL')
 
-if not API_BASE_URL:
-    raise ValueError("API_BASE_URL environment variable is not set")
+# if not API_BASE_URL:
+#     raise ValueError("API_BASE_URL environment variable is not set")
 
-UPLOAD_FOLDER = 'static/uploads'
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# UPLOAD_FOLDER = 'static/uploads'
+# os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.route('/')
 def hello_world():
