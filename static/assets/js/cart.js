@@ -15,13 +15,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const itemTotal = item.quantity * item.price;
         const cartItem = `
           <div class="cart-item py-3">
-            <div class="d-flex justify-content-between">
-              <div class="d-flex justify-content-center align-items-center">
-                <button class="btn btn-outline-secondary btn-sm mt-1" onclick="openEditModal('${item.product_id}')">Edit</button>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
                 <h6 class="mb-1">${item.quantity}x ${item.item}</h6>
               </div>
               <div class="text-end">
                 <span class="fw-bold">Php ${itemTotal}</span>
+                <button class="btn btn-outline-secondary btn-sm mt-1" onclick="openEditModal('${item.product_id}')">Edit</button>
               </div>
             </div>
           </div>
