@@ -51,6 +51,11 @@
       .then(response => response.json())
       .then(data => {
         alert(data.message || 'Logged out successfully!');
+        window.fcWidget.user.clear().then(function() {
+            console.log('Freshchat user session cleared on sign out');
+        }).catch(function(error) {
+            console.error('Error clearing Freshchat user on sign out:', error);
+        });
         sessionStorage.clear(); // Clear session storage
         window.location.href = data.redirect || '/signin.html'; // Redirect to sign-in page
       })
