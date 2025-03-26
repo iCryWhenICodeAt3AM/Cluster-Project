@@ -301,6 +301,9 @@ document.addEventListener("DOMContentLoaded", function () {
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
               <i class="bi bi-pencil"></i>
             </button>
+            <button class="btn btn-sm btn-success stock-manage-btn" data-product-id="${product.product_id}">
+              <i class="bi bi-box-seam"></i>
+            </button>
             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
               <i class="bi bi-trash"></i>
             </button>
@@ -878,6 +881,9 @@ document.addEventListener("DOMContentLoaded", function () {
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
               <i class="bi bi-pencil"></i>
             </button>
+            <button class="btn btn-sm btn-success stock-manage-btn" data-product-id="${product.product_id}">
+              <i class="bi bi-box-seam"></i>
+            </button>
             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
               <i class="bi bi-trash"></i>
             </button>
@@ -973,6 +979,9 @@ document.addEventListener("DOMContentLoaded", function () {
           <div class="btn-group">
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-product='${JSON.stringify(product)}'>
               <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-success stock-manage-btn" data-product-id="${product.product_id}">
+              <i class="bi bi-box-seam"></i>
             </button>
             <button class="btn btn-sm btn-danger" onclick="deleteProduct('${product.product_id}')">
               <i class="bi bi-trash"></i>
@@ -1180,5 +1189,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initial fetch
   fetchInventory();
+
+  // Add event listener for stock management buttons in product table
+  document.getElementById("products-stock").addEventListener("click", function (e) {
+    const target = e.target.closest(".stock-manage-btn");
+    if (target && target.dataset.productId) {
+      openUpdateStockModal(target.dataset.productId);
+    }
+  });
 
 });

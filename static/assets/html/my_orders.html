@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders</title>
+  <link rel="stylesheet" href="../css/bootstrap.min.css">
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1>My Orders</h1>
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Preparing</h2>
+        <div id="preparing-orders" class="order-section"></div>
+      </div>
+      <div class="col-md-6">
+        <h2>Shipped</h2>
+        <div id="transport-orders" class="order-section"></div>
+      </div>
+      <div class="col-md-6">
+        <h2>Delivered</h2>
+        <div id="delivered-orders" class="order-section"></div>
+      </div>
+      <div class="col-md-6">
+        <h2>Received</h2>
+        <div id="received-orders" class="order-section"></div>
+      </div>
+      <div class="col-md-6">
+        <h2>Cancelled</h2>
+        <div id="cancelled-orders" class="order-section"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="order-details-modal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Order details will be dynamically inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move scripts to the end of the body -->
+  <script src="../js/bootstrap.bundle.min.js"></script>
+  <script src="../js/my_orders.js"></script>
+</body>
+</html>
