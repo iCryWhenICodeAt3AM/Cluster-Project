@@ -45,6 +45,17 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
 
+    // Check if the current stock can accommodate the requested quantity
+    const existingCartItem = cart.find(item => item.product_id === product.product_id);
+    const currentCartQuantity = existingCartItem ? existingCartItem.quantity : 0;
+    const totalRequestedQuantity = currentCartQuantity + quantity;
+
+    if (totalRequestedQuantity > product.stock) {
+      alert(`Insufficient stock. Only ${product.stock - currentCartQuantity} more items can be added.`);
+      console.log(`Stock check failed: Requested ${totalRequestedQuantity}, Available ${product.stock}`);
+      return;
+    }
+
     // Prepare the product object with the quantity
     product.quantity = quantity;
 
@@ -157,6 +168,13 @@ document.addEventListener("DOMContentLoaded", function() {
     } else if (operation === 'update' && newQuantity > 0) {
       const product = cart.find(item => item.product_id === productId);
       if (product) {
+        // Check if the new quantity exceeds the stock
+        if (newQuantity > product.stock) {
+          alert(`Insufficient stock. Only ${product.stock} items are available.`);
+          console.log(`Stock check failed: Requested ${newQuantity}, Available ${product.stock}`);
+          return;
+        }
+  
         product.quantity = newQuantity;
   
         fetch(`/api/cart/${userId}/edit`, {
