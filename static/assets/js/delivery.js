@@ -95,24 +95,32 @@ function displayFilteredOrders(filteredOrders) {
     
     // Populate tables with filtered orders
     filteredOrders.forEach(order => {
-        let actionButtons = '';
-        
-        // Reorder buttons: Details first, Return to in the middle, Move to last
+        let actionButtons = [];
+
+        // Add buttons based on order status
         if (order.status === 'Preparing') {
-            actionButtons = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
-                            <i class="bi bi-arrow-right-circle"></i> Move to Shipped
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                    <i class="bi bi-arrow-right-circle"></i> Move to Shipped
+                </button>
+            `);
         } else if (order.status === 'Shipped') {
-            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
-                            <i class="bi bi-arrow-left-circle"></i> Return to Preparing
-                          </button>
-                          <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
-                            <i class="bi bi-arrow-right-circle"></i> Move to Delivered
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                    <i class="bi bi-arrow-left-circle"></i> Return to Preparing
+                </button>
+            `);
+            actionButtons.push(`
+                <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                    <i class="bi bi-arrow-right-circle"></i> Move to Delivered
+                </button>
+            `);
         } else if (order.status === 'Delivered') {
-            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
-                            <i class="bi bi-arrow-left-circle"></i> Return to Shipped
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                    <i class="bi bi-arrow-left-circle"></i> Return to Shipped
+                </button>
+            `);
         }
 
         const row = `
@@ -125,7 +133,9 @@ function displayFilteredOrders(filteredOrders) {
                     <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>
                         <i class="bi bi-info-circle"></i> Details
                     </button>
-                    ${actionButtons}
+                </td>
+                <td class="text-center">
+                    ${actionButtons.join('')}
                 </td>
             </tr>
         `;
@@ -344,24 +354,32 @@ function displayOrders(orders) {
     let receivedCount = 0;
 
     orders.forEach(order => {
-        let actionButtons = '';
+        let actionButtons = [];
         
-        // Reorder buttons: Details first, Return to in the middle, Move to last
+        // Add buttons based on order status
         if (order.status === 'Preparing') {
-            actionButtons = `<button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
-                            <i class="bi bi-arrow-right-circle"></i> Move to Shipped
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                    <i class="bi bi-arrow-right-circle"></i> Move to Shipped
+                </button>
+            `);
         } else if (order.status === 'Shipped') {
-            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
-                            <i class="bi bi-arrow-left-circle"></i> Return to Preparing
-                          </button>
-                          <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
-                            <i class="bi bi-arrow-right-circle"></i> Move to Delivered
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                    <i class="bi bi-arrow-left-circle"></i> Return to Preparing
+                </button>
+            `);
+            actionButtons.push(`
+                <button class="btn btn-success btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'forward')">
+                    <i class="bi bi-arrow-right-circle"></i> Move to Delivered
+                </button>
+            `);
         } else if (order.status === 'Delivered') {
-            actionButtons = `<button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
-                            <i class="bi bi-arrow-left-circle"></i> Return to Shipped
-                          </button>`;
+            actionButtons.push(`
+                <button class="btn btn-warning btn-sm ms-1" onclick="updateOrderStatus('${order.order_id}', '${order.status}', '${order.customer_name}', 'backward')">
+                    <i class="bi bi-arrow-left-circle"></i> Return to Shipped
+                </button>
+            `);
         }
 
         const row = `
@@ -374,7 +392,9 @@ function displayOrders(orders) {
                     <button class="btn btn-info btn-sm" onclick='showOrderDetails("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}", "${order.customer_name}", "${order.order_datetime}")'>
                         <i class="bi bi-info-circle"></i> Details
                     </button>
-                    ${actionButtons}
+                </td>
+                <td class="text-center">
+                    ${actionButtons.join('')}
                 </td>
             </tr>
         `;
