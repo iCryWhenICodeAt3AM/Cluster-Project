@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
           JSON.stringify(order)
         )}')">Show Details</button>
         ${
-          order.status === "Preparing"
+          order.status === "Preparing" || order.status === "Shipped"
             ? `<button class="btn btn-danger btn-sm flex-fill" style="margin  -right: 0.5rem;" onclick='cancelOrder("${order.order_id}", "${encodeURIComponent(JSON.stringify(order.items))}")'>Cancel Order</button>`
             : ""
         }
