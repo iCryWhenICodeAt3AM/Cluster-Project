@@ -290,6 +290,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
         <td>${product.category}</td>
         <td>Php ${product.price}</td>
+        <td>${product.brand}</td>
         <td>
           <span class="badge ${stockBadgeClass}">${product.stock} left</span>
         </td>
